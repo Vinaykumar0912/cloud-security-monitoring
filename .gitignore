@@ -1,0 +1,11 @@
+.idea/
+**/.idea/
+
+**/.git/
+**/target/
+**/node_modules/
+
+**/.env
+**/.env.*
+
+cloud_security_monitoring_backend/backend/

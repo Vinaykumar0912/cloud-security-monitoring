@@ -38,7 +38,7 @@ function App() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // LOGIN
+
   const handleLogin = async () => {
     setLoading(true)
     setMessage('')
@@ -75,7 +75,6 @@ function App() {
     }
   }
 
-  // GET DASHBOARD SUMMARY
   const getDashboardSummary = async () => {
     const jwtToken = localStorage.getItem('jwtToken')
 
@@ -112,7 +111,7 @@ function App() {
     }
   }
 
-  // GET ASSETS USING JWT
+
   const getAssets = async () => {
     const jwtToken = localStorage.getItem('jwtToken')
 
@@ -152,7 +151,6 @@ function App() {
     }
   }
 
-  // LOGOUT
   const handleLogout = () => {
     localStorage.removeItem('jwtToken')
     setToken(null)

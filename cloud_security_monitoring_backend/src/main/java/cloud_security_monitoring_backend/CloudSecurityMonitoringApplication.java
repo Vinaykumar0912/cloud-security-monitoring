@@ -8,10 +8,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class CloudSecurityMonitoringApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(
-				CloudSecurityMonitoringApplication.class,
-				args
-		);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(
+                CloudSecurityMonitoringApplication.class,
+                args
+        );
+    }
 }

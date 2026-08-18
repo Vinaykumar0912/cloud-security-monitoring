@@ -1,5 +1,6 @@
 package cloud_security_monitoring_backend.service;
 
+import cloud_security_monitoring_backend.dto.DashboardSummaryDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import cloud_security_monitoring_backend.Entity.Asset;
@@ -90,5 +91,49 @@ public class AssetService {
         asset.setDate(dto.getDate());
 
         return asset;
+    }
+    public DashboardSummaryDTO getDashboardSummary() {
+
+        List<Asset> all = assetRepository.findAll();
+
+        long total = all.size();
+
+        long online = all.stream()
+                .filter(a -> "ONLINE".equalsIgnoreCase(a.getStatus()))
+                .count();
+
+        long offline = all.stream()
+                .filter(a -> "OFFLINE".equalsIgnoreCase(a.getStatus()))
+                .count();
+
+        long critical = all.stream()
+                .filter(a -> "CRITICAL".equalsIgnoreCase(a.getStatus()))
+                .count();
+
+        double avgCpu = all.stream()
+                .filter(a -> a.getCpuUsage() != null)
+                .mapToDouble(Asset::getCpuUsage)
+                .average()
+                .orElse(0);
+
+        double avgMem = all.stream()
+                .filter(a -> a.getMemoryUsage() != null)
+                .mapToDouble(Asset::getMemoryUsage)
+                .average()
+                .orElse(0);
+
+        double uptime = total == 0
+                ? 0
+                : ((double) online / total) * 100;
+
+        return DashboardSummaryDTO.builder()
+                .totalAssets(total)
+                .uptimePercentage(uptime)
+                .onlineAssets(online)
+                .offlineAssets(offline)
+                .criticalAlerts(critical)
+                .avgCpuUsage(avgCpu)
+                .avgMemoryUsage(avgMem)
+                .build();
     }
 }

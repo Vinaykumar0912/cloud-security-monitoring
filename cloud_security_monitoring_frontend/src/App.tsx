@@ -16,6 +16,15 @@ interface Asset {
   networkUsage: number
   date: string
 }
+interface DashboardSummary {
+  totalAssets: number
+  uptimePercentage: number
+  onlineAssets: number
+  offlineAssets: number
+  criticalAlerts: number
+  avgCpuUsage: number
+  avgMemoryUsage: number
+}
 
 function App() {
   const [username, setUsername] = useState('')
@@ -25,6 +34,7 @@ function App() {
   )
 
   const [assets, setAssets] = useState<Asset[]>([])
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -62,6 +72,43 @@ function App() {
       )
     } finally {
       setLoading(false)
+    }
+  }
+
+  // GET DASHBOARD SUMMARY
+  const getDashboardSummary = async () => {
+    const jwtToken = localStorage.getItem('jwtToken')
+
+    if (!jwtToken) {
+      setMessage('Please login first')
+      return
+    }
+
+    try {
+      const response = await fetch(
+          `${API_URL}/api/assets/dashboard/summary`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+              'Content-Type': 'application/json',
+            },
+          }
+      )
+
+      if (!response.ok) {
+        throw new Error(`Dashboard request failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      setSummary(data)
+    } catch (error) {
+      setMessage(
+          error instanceof Error
+              ? error.message
+              : 'Failed to load dashboard summary'
+      )
     }
   }
 
@@ -153,9 +200,60 @@ function App() {
 
               <p>JWT authentication is active.</p>
 
-              <button onClick={getAssets} disabled={loading}>
-                {loading ? 'Loading...' : 'Get Assets'}
+              <button
+                  onClick={async () => {
+                    setLoading(true)
+                    await Promise.all([
+                      getAssets(),
+                      getDashboardSummary()
+                    ])
+                    setLoading(false)
+                  }}
+                  disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Load Dashboard'}
               </button>
+
+              {summary && (
+                  <div className="dashboard-summary">
+
+                    <div className="summary-card">
+                      <h3>Total Assets</h3>
+                      <p>{summary.totalAssets}</p>
+                    </div>
+
+                    <div className="summary-card">
+                      <h3>Uptime</h3>
+                      <p>{Number(summary.uptimePercentage ?? 0).toFixed(2)}%</p>
+                    </div>
+
+                    <div className="summary-card">
+                      <h3>Online Assets</h3>
+                      <p>{summary.onlineAssets}</p>
+                    </div>
+
+                    <div className="summary-card">
+                      <h3>Offline Assets</h3>
+                      <p>{summary.offlineAssets}</p>
+                    </div>
+
+                    <div className="summary-card">
+                      <h3>Critical Alerts</h3>
+                      <p>{summary.criticalAlerts}</p>
+                    </div>
+
+                    <div className="summary-card">
+                      <h3>Avg CPU</h3>
+                      <p>{Number(summary.avgCpuUsage ?? 0).toFixed(2)}%</p>
+                    </div>
+
+                    <div className="summary-card">
+                      <h3>Avg Memory</h3>
+                      <p>{Number(summary.avgMemoryUsage ?? 0).toFixed(2)}%</p>
+                    </div>
+
+                  </div>
+              )}
 
               {message && <p>{message}</p>}
 

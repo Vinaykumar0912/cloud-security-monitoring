@@ -19,7 +19,7 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final AssetRepository assetRepository;
 
-    // Create Alert
+
     public AlertDTO createAlert(Long assetId, String severity, String message) {
 
         Asset asset = assetRepository.findById(assetId)
@@ -37,7 +37,7 @@ public class AlertService {
         return toDTO(alertRepository.save(alert));
     }
 
-    // Resolve Alert
+
     public AlertDTO resolveAlert(Long alertId) {
 
         Alert alert = alertRepository.findById(alertId)
@@ -50,7 +50,7 @@ public class AlertService {
         return toDTO(alertRepository.save(alert));
     }
 
-    // Get Open Alerts
+
     public List<AlertDTO> getOpenAlerts() {
 
         return alertRepository
@@ -60,7 +60,7 @@ public class AlertService {
                 .collect(Collectors.toList());
     }
 
-    // Convert Entity to DTO
+
     private AlertDTO toDTO(Alert alert) {
 
         return AlertDTO.builder()

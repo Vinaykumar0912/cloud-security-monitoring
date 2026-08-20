@@ -17,7 +17,6 @@ public class JwtUtil {
 
     private final long EXPIRATION = 1000 * 60 * 60;
 
-    // Generate JWT token
     public String generateToken(String username) {
 
         return Jwts.builder()
@@ -30,7 +29,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Extract username from token
+
     public String extractUsername(String token) {
 
         return Jwts.parserBuilder()
@@ -41,7 +40,7 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    // Validate token
+
     public boolean isTokenValid(String token) {
 
         try {

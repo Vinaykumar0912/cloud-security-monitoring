@@ -34,7 +34,7 @@ public class AssetController {
         return assetService.createAsset(dto);
     }
 
-    // Dashboard Summary (Milestone 2)
+
     @GetMapping("/dashboard/summary")
     public DashboardSummaryDTO getDashboardSummary() {
         return assetService.getDashboardSummary();

@@ -16,7 +16,7 @@ public class AssetService {
     @Autowired
     private AssetRepository assetRepository;
 
-    // Get All Assets
+
     public List<AssetDTO> getAllAssets() {
         return assetRepository.findAll()
                 .stream()
@@ -24,7 +24,7 @@ public class AssetService {
                 .collect(Collectors.toList());
     }
 
-    // Get Asset By Id
+
     public AssetDTO getAssetById(Long id) {
 
         Asset asset = assetRepository.findById(id)
@@ -33,8 +33,7 @@ public class AssetService {
         return toDTO(asset);
     }
 
-    // Create Asset
-    // Create Asset
+
     public AssetDTO createAsset(AssetDTO dto) {
 
         Asset asset = Asset.builder()
@@ -53,7 +52,7 @@ public class AssetService {
         return toDTO(assetRepository.save(asset));
     }
 
-    // Convert Entity to DTO
+
     private AssetDTO toDTO(Asset asset) {
 
         AssetDTO dto = new AssetDTO();
@@ -73,7 +72,7 @@ public class AssetService {
         return dto;
     }
 
-    // Convert DTO to Entity
+
     private Asset toEntity(AssetDTO dto) {
 
         Asset asset = new Asset();

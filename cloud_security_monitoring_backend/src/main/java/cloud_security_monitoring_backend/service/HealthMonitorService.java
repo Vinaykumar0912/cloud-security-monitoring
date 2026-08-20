@@ -25,7 +25,7 @@ public class HealthMonitorService {
 
         for (Asset asset : assets) {
 
-            // Check CPU usage
+
             if (asset.getCpuUsage() != null
                     && asset.getCpuUsage() >= CPU_THRESHOLD) {
 
@@ -39,7 +39,7 @@ public class HealthMonitorService {
                 );
             }
 
-            // Check Memory usage
+
             else if (asset.getMemoryUsage() != null
                     && asset.getMemoryUsage() >= MEMORY_THRESHOLD) {
 
@@ -53,7 +53,7 @@ public class HealthMonitorService {
                 );
             }
 
-            // Asset is healthy
+
             else {
                 asset.setStatus("ONLINE");
             }

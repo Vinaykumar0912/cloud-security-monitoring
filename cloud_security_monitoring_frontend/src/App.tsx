@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import './App.css'
 
+import { useAuth } from './context/AuthContext.jsx'
+import Login from './components/Login.jsx'
+
 const API_URL = 'http://localhost:8080'
 
 interface Asset {
@@ -16,6 +19,7 @@ interface Asset {
   networkUsage: number
   date: string
 }
+
 interface DashboardSummary {
   totalAssets: number
   uptimePercentage: number
@@ -27,11 +31,8 @@ interface DashboardSummary {
 }
 
 function App() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [token, setToken] = useState<string | null>(
-      localStorage.getItem('jwtToken')
-  )
+
+  const { accessToken, logout } = useAuth()
 
   const [assets, setAssets] = useState<Asset[]>([])
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
@@ -39,46 +40,10 @@ function App() {
   const [loading, setLoading] = useState(false)
 
 
-  const handleLogin = async () => {
-    setLoading(true)
-    setMessage('')
-
-    try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Invalid username or password')
-      }
-
-      const data = await response.json()
-
-      // Save JWT token
-      localStorage.setItem('jwtToken', data.token)
-      setToken(data.token)
-
-      setMessage('Login successful!')
-    } catch (error) {
-      setMessage(
-          error instanceof Error ? error.message : 'Login failed'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  // GET DASHBOARD SUMMARY
   const getDashboardSummary = async () => {
-    const jwtToken = localStorage.getItem('jwtToken')
 
-    if (!jwtToken) {
+    if (!accessToken) {
       setMessage('Please login first')
       return
     }
@@ -89,20 +54,24 @@ function App() {
           {
             method: 'GET',
             headers: {
-              Authorization: `Bearer ${jwtToken}`,
+              Authorization: `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
             },
           }
       )
 
       if (!response.ok) {
-        throw new Error(`Dashboard request failed: ${response.status}`)
+        throw new Error(
+            `Dashboard request failed: ${response.status}`
+        )
       }
 
       const data = await response.json()
 
       setSummary(data)
+
     } catch (error) {
+
       setMessage(
           error instanceof Error
               ? error.message
@@ -112,10 +81,10 @@ function App() {
   }
 
 
+  // GET ASSETS
   const getAssets = async () => {
-    const jwtToken = localStorage.getItem('jwtToken')
 
-    if (!jwtToken) {
+    if (!accessToken) {
       setMessage('Please login first')
       return
     }
@@ -124,87 +93,91 @@ function App() {
     setMessage('')
 
     try {
-      const response = await fetch(`${API_URL}/api/assets`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-          'Content-Type': 'application/json',
-        },
-      })
+
+      const response = await fetch(
+          `${API_URL}/api/assets`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          }
+      )
 
       if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`)
+        throw new Error(
+            `Request failed: ${response.status}`
+        )
       }
 
       const data = await response.json()
 
       setAssets(data)
       setMessage('Assets loaded successfully!')
+
     } catch (error) {
+
       setMessage(
           error instanceof Error
               ? error.message
               : 'Failed to load assets'
       )
+
     } finally {
       setLoading(false)
     }
   }
 
+
+  // LOGOUT
   const handleLogout = () => {
-    localStorage.removeItem('jwtToken')
-    setToken(null)
+
+    logout()
+
     setAssets([])
+    setSummary(null)
     setMessage('Logged out successfully')
   }
 
+
   return (
       <div className="app">
+
         <h1>Cloud Security Monitoring System</h1>
 
-        {!token ? (
-            <div className="login-card">
-              <h2>Login</h2>
+        {!accessToken ? (
 
-              <input
-                  type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-              />
+            // LOGIN PAGE
+            <Login />
 
-              <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <button onClick={handleLogin} disabled={loading}>
-                {loading ? 'Logging in...' : 'Login'}
-              </button>
-
-              {message && <p>{message}</p>}
-            </div>
         ) : (
+
+            // DASHBOARD
             <div className="dashboard">
+
               <div className="top-bar">
+
                 <h2>Security Dashboard</h2>
 
                 <button onClick={handleLogout}>
                   Logout
                 </button>
+
               </div>
 
               <p>JWT authentication is active.</p>
 
               <button
                   onClick={async () => {
+
                     setLoading(true)
+
                     await Promise.all([
                       getAssets(),
                       getDashboardSummary()
                     ])
+
                     setLoading(false)
                   }}
                   disabled={loading}
@@ -212,7 +185,9 @@ function App() {
                 {loading ? 'Loading...' : 'Load Dashboard'}
               </button>
 
+
               {summary && (
+
                   <div className="dashboard-summary">
 
                     <div className="summary-card">
@@ -222,7 +197,11 @@ function App() {
 
                     <div className="summary-card">
                       <h3>Uptime</h3>
-                      <p>{Number(summary.uptimePercentage ?? 0).toFixed(2)}%</p>
+                      <p>
+                        {Number(
+                            summary.uptimePercentage ?? 0
+                        ).toFixed(2)}%
+                      </p>
                     </div>
 
                     <div className="summary-card">
@@ -242,68 +221,99 @@ function App() {
 
                     <div className="summary-card">
                       <h3>Avg CPU</h3>
-                      <p>{Number(summary.avgCpuUsage ?? 0).toFixed(2)}%</p>
+                      <p>
+                        {Number(
+                            summary.avgCpuUsage ?? 0
+                        ).toFixed(2)}%
+                      </p>
                     </div>
 
                     <div className="summary-card">
                       <h3>Avg Memory</h3>
-                      <p>{Number(summary.avgMemoryUsage ?? 0).toFixed(2)}%</p>
+                      <p>
+                        {Number(
+                            summary.avgMemoryUsage ?? 0
+                        ).toFixed(2)}%
+                      </p>
                     </div>
 
                   </div>
               )}
 
+
               {message && <p>{message}</p>}
 
+
               {assets.length > 0 && (
+
                   <div className="assets">
+
                     <h2>Assets</h2>
 
                     {assets.map((asset) => (
-                        <div className="asset-card" key={asset.id}>
+
+                        <div
+                            className="asset-card"
+                            key={asset.id}
+                        >
+
                           <h3>{asset.assetName}</h3>
 
                           <p>
-                            <strong>Type:</strong> {asset.assetType}
+                            <strong>Type:</strong>{' '}
+                            {asset.assetType}
                           </p>
 
                           <p>
-                            <strong>IP:</strong> {asset.ipAddress}
+                            <strong>IP:</strong>{' '}
+                            {asset.ipAddress}
                           </p>
 
                           <p>
-                            <strong>Location:</strong> {asset.location}
+                            <strong>Location:</strong>{' '}
+                            {asset.location}
                           </p>
 
                           <p>
-                            <strong>Status:</strong> {asset.status}
+                            <strong>Status:</strong>{' '}
+                            {asset.status}
                           </p>
 
                           <p>
-                            <strong>CPU:</strong> {asset.cpuUsage}%
+                            <strong>CPU:</strong>{' '}
+                            {asset.cpuUsage}%
                           </p>
 
                           <p>
-                            <strong>Memory:</strong> {asset.memoryUsage}%
+                            <strong>Memory:</strong>{' '}
+                            {asset.memoryUsage}%
                           </p>
 
                           <p>
-                            <strong>Disk:</strong> {asset.diskUsage}%
+                            <strong>Disk:</strong>{' '}
+                            {asset.diskUsage}%
                           </p>
 
                           <p>
-                            <strong>Network:</strong> {asset.networkUsage}%
+                            <strong>Network:</strong>{' '}
+                            {asset.networkUsage}%
                           </p>
 
                           <p>
-                            <strong>Date:</strong> {asset.date}
+                            <strong>Date:</strong>{' '}
+                            {asset.date}
                           </p>
+
                         </div>
+
                     ))}
+
                   </div>
               )}
+
             </div>
         )}
+
       </div>
   )
 }

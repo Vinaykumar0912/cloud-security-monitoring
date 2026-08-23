@@ -1,7 +1,10 @@
 package cloud_security_monitoring_backend.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import cloud_security_monitoring_backend.Entity.Alert;
 import cloud_security_monitoring_backend.Entity.Asset;
 import cloud_security_monitoring_backend.dto.AlertDTO;
@@ -14,10 +17,19 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AlertService {
 
     private final AlertRepository alertRepository;
     private final AssetRepository assetRepository;
+    private final NotificationMailService notificationMailService;
+    private final SmsService smsService;
+
+    @Value("${spring.mail.username}")
+    private String notificationRecipient;
+
+    @Value("${twilio.notification.recipient}")
+    private String smsRecipient;
 
 
     public AlertDTO createAlert(Long assetId, String severity, String message) {
@@ -34,7 +46,46 @@ public class AlertService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return toDTO(alertRepository.save(alert));
+        Alert savedAlert = alertRepository.save(alert);
+
+
+        // Send email notification
+        try {
+
+            notificationMailService.sendAlertEmail(
+                    notificationRecipient,
+                    String.valueOf(asset.getAssetType()),
+                    String.valueOf(asset.getStatus()),
+                    severity,
+                    message
+            );
+
+            log.info("Alert notification email sent successfully");
+
+        } catch (Exception e) {
+
+            log.error("Failed to send alert notification email", e);
+        }
+
+        try {
+
+            smsService.sendAlertSms(
+                    smsRecipient,
+                    String.valueOf(asset.getAssetType()),
+                    String.valueOf(asset.getStatus()),
+                    severity,
+                    message
+            );
+
+            log.info("Alert notification SMS sent successfully");
+
+        } catch (Exception e) {
+
+            log.error("Failed to send alert notification SMS", e);
+        }
+
+
+        return toDTO(savedAlert);
     }
 
 

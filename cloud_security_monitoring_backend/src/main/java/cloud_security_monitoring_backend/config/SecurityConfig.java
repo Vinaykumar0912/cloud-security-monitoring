@@ -1,91 +1,85 @@
 package cloud_security_monitoring_backend.config;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import cloud_security_monitoring_backend.util.JwtUtil;
 
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.io.IOException;
+import java.util.Collections;
 
-import java.util.List;
-
-@Configuration
-@EnableWebSecurity
+@Component
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtFilter jwtFilter;
+    private final JwtUtil jwtUtil;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
 
-        http
-                .csrf(csrf -> csrf.disable())
-
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                request -> "OPTIONS".equals(request.getMethod())
-                        ).permitAll()
-
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        .anyRequest().authenticated()
-                )
-
-                .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable());
-
-        http.addFilterBefore(
-                jwtFilter,
-                UsernamePasswordAuthenticationFilter.class
-        );
-
-        return http.build();
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        String authHeader =
+                request.getHeader("Authorization");
 
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
-        );
+        // No Authorization header
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
 
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
-                )
-        );
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
+        String token = authHeader.substring(7);
 
-        configuration.setAllowCredentials(true);
+        // Invalid or expired token
+        if (!jwtUtil.isTokenValid(token)) {
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+            response.setStatus(
+                    HttpServletResponse.SC_UNAUTHORIZED
+            );
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
+            response.setContentType("application/json");
 
-        return source;
+            response.getWriter().write(
+                    "{\"error\":\"Invalid or expired access token\"}"
+            );
+
+            return;
+        }
+
+        // Valid token
+        String username =
+                jwtUtil.extractUsername(token);
+
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        username,
+                        null,
+                        Collections.emptyList()
+                );
+
+        SecurityContextHolder
+                .getContext()
+                .setAuthentication(authentication);
+
+        filterChain.doFilter(request, response);
     }
 }

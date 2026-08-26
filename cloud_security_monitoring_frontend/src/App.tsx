@@ -3,8 +3,7 @@ import './App.css'
 
 import { useAuth } from './context/AuthContext.jsx'
 import Login from './components/Login.jsx'
-
-const API_URL = 'http://localhost:8080'
+import apiClient from './api/apiClient'
 
 interface Asset {
   id: number
@@ -35,7 +34,9 @@ function App() {
   const { accessToken, logout } = useAuth()
 
   const [assets, setAssets] = useState<Asset[]>([])
-  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [summary, setSummary] =
+      useState<DashboardSummary | null>(null)
+
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -49,26 +50,12 @@ function App() {
     }
 
     try {
-      const response = await fetch(
-          `${API_URL}/api/assets/dashboard/summary`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          }
+
+      const response = await apiClient.get(
+          '/api/assets/dashboard/summary'
       )
 
-      if (!response.ok) {
-        throw new Error(
-            `Dashboard request failed: ${response.status}`
-        )
-      }
-
-      const data = await response.json()
-
-      setSummary(data)
+      setSummary(response.data)
 
     } catch (error) {
 
@@ -94,26 +81,11 @@ function App() {
 
     try {
 
-      const response = await fetch(
-          `${API_URL}/api/assets`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          }
+      const response = await apiClient.get(
+          '/api/assets'
       )
 
-      if (!response.ok) {
-        throw new Error(
-            `Request failed: ${response.status}`
-        )
-      }
-
-      const data = await response.json()
-
-      setAssets(data)
+      setAssets(response.data)
       setMessage('Assets loaded successfully!')
 
     } catch (error) {
@@ -125,7 +97,9 @@ function App() {
       )
 
     } finally {
+
       setLoading(false)
+
     }
   }
 
@@ -168,6 +142,7 @@ function App() {
 
               <p>JWT authentication is active.</p>
 
+
               <button
                   onClick={async () => {
 
@@ -179,12 +154,17 @@ function App() {
                     ])
 
                     setLoading(false)
+
                   }}
                   disabled={loading}
               >
-                {loading ? 'Loading...' : 'Load Dashboard'}
+                {loading
+                    ? 'Loading...'
+                    : 'Load Dashboard'}
               </button>
 
+
+              {/* DASHBOARD SUMMARY */}
 
               {summary && (
 
@@ -192,8 +172,11 @@ function App() {
 
                     <div className="summary-card">
                       <h3>Total Assets</h3>
-                      <p>{summary.totalAssets}</p>
+                      <p>
+                        {summary.totalAssets}
+                      </p>
                     </div>
+
 
                     <div className="summary-card">
                       <h3>Uptime</h3>
@@ -204,20 +187,30 @@ function App() {
                       </p>
                     </div>
 
+
                     <div className="summary-card">
                       <h3>Online Assets</h3>
-                      <p>{summary.onlineAssets}</p>
+                      <p>
+                        {summary.onlineAssets}
+                      </p>
                     </div>
+
 
                     <div className="summary-card">
                       <h3>Offline Assets</h3>
-                      <p>{summary.offlineAssets}</p>
+                      <p>
+                        {summary.offlineAssets}
+                      </p>
                     </div>
+
 
                     <div className="summary-card">
                       <h3>Critical Alerts</h3>
-                      <p>{summary.criticalAlerts}</p>
+                      <p>
+                        {summary.criticalAlerts}
+                      </p>
                     </div>
+
 
                     <div className="summary-card">
                       <h3>Avg CPU</h3>
@@ -227,6 +220,7 @@ function App() {
                         ).toFixed(2)}%
                       </p>
                     </div>
+
 
                     <div className="summary-card">
                       <h3>Avg Memory</h3>
@@ -238,11 +232,18 @@ function App() {
                     </div>
 
                   </div>
+
               )}
 
 
-              {message && <p>{message}</p>}
+              {/* MESSAGE */}
 
+              {message && (
+                  <p>{message}</p>
+              )}
+
+
+              {/* ASSETS */}
 
               {assets.length > 0 && (
 
@@ -257,47 +258,58 @@ function App() {
                             key={asset.id}
                         >
 
-                          <h3>{asset.assetName}</h3>
+                          <h3>
+                            {asset.assetName}
+                          </h3>
+
 
                           <p>
                             <strong>Type:</strong>{' '}
                             {asset.assetType}
                           </p>
 
+
                           <p>
                             <strong>IP:</strong>{' '}
                             {asset.ipAddress}
                           </p>
+
 
                           <p>
                             <strong>Location:</strong>{' '}
                             {asset.location}
                           </p>
 
+
                           <p>
                             <strong>Status:</strong>{' '}
                             {asset.status}
                           </p>
+
 
                           <p>
                             <strong>CPU:</strong>{' '}
                             {asset.cpuUsage}%
                           </p>
 
+
                           <p>
                             <strong>Memory:</strong>{' '}
                             {asset.memoryUsage}%
                           </p>
+
 
                           <p>
                             <strong>Disk:</strong>{' '}
                             {asset.diskUsage}%
                           </p>
 
+
                           <p>
                             <strong>Network:</strong>{' '}
                             {asset.networkUsage}%
                           </p>
+
 
                           <p>
                             <strong>Date:</strong>{' '}
@@ -309,9 +321,11 @@ function App() {
                     ))}
 
                   </div>
+
               )}
 
             </div>
+
         )}
 
       </div>

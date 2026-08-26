@@ -14,3 +14,19 @@ export const login = async (username: string, password: string) => {
         throw error;
     }
 };
+
+export const refreshAccessToken = async (refreshToken: string) => {
+    try {
+        const response = await axios.post(
+            `${API_URL}/api/auth/refresh`,
+            {
+                refreshToken
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error("Token refresh failed:", error);
+        throw error;
+    }
+};

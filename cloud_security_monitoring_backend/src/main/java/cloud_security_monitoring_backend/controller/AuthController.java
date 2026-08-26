@@ -1,8 +1,13 @@
 package cloud_security_monitoring_backend.controller;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import cloud_security_monitoring_backend.Entity.User;
+import cloud_security_monitoring_backend.repository.UserRepository;
 import cloud_security_monitoring_backend.util.JwtUtil;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -13,21 +18,51 @@ import java.util.Map;
 public class AuthController {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     public Map<String, String> login(
             @RequestBody Map<String, String> credentials) {
 
         String username = credentials.get("username");
-        String password = credentials.get("password");
+        String rawPassword = credentials.get("password");
 
-        if ("admin".equals(username) && "admin123".equals(password)) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("Invalid credentials"));
 
-            String token = jwtUtil.generateToken(username);
-
-            return Map.of("token", token);
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
         }
 
-        throw new RuntimeException("Invalid credentials");
+        String accessToken = jwtUtil.generateToken(username);
+        String refreshToken = jwtUtil.generateRefreshToken(username);
+
+        return Map.of(
+                "accessToken", accessToken,
+                "refreshToken", refreshToken
+        );
+
+    }
+    @PostMapping("/refresh")
+    public Map<String, String> refresh(
+            @RequestBody Map<String, String> request) {
+
+        String refreshToken = request.get("refreshToken");
+
+        if (!jwtUtil.isTokenValid(refreshToken)
+                || !jwtUtil.isRefreshToken(refreshToken)) {
+
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        String username = jwtUtil.extractUsername(refreshToken);
+
+        String newAccessToken = jwtUtil.generateToken(username);
+
+        return Map.of(
+                "accessToken", newAccessToken
+        );
     }
 }

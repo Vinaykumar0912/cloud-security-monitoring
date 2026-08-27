@@ -1,85 +1,173 @@
 package cloud_security_monitoring_backend.config;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import cloud_security_monitoring_backend.util.JwtUtil;
+import org.springframework.http.HttpMethod;
 
-import java.io.IOException;
-import java.util.Collections;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
-@Component
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
 @RequiredArgsConstructor
-public class JwtFilter extends OncePerRequestFilter {
+public class SecurityConfig {
 
-    private final JwtUtil jwtUtil;
+    private final JwtFilter jwtFilter;
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http) throws Exception {
 
-        return "OPTIONS".equalsIgnoreCase(request.getMethod());
-    }
+        http
+                .csrf(csrf -> csrf.disable())
 
-    @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+                .cors(cors ->
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
+                )
 
-        String authHeader =
-                request.getHeader("Authorization");
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
 
-        // No Authorization header
-        if (authHeader == null ||
-                !authHeader.startsWith("Bearer ")) {
+                .authorizeHttpRequests(auth -> auth
 
-            filterChain.doFilter(request, response);
-            return;
-        }
+                        .requestMatchers(
+                                request ->
+                                        "OPTIONS".equalsIgnoreCase(
+                                                request.getMethod()
+                                        )
+                        ).permitAll()
 
-        String token = authHeader.substring(7);
+                        .requestMatchers(
+                                "/api/auth/**"
+                        ).permitAll()
 
-        // Invalid or expired token
-        if (!jwtUtil.isTokenValid(token)) {
+                        // VIEW ALERTS
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/alerts/**"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "OPERATOR",
+                                "VIEWER"
+                        )
 
-            response.setStatus(
-                    HttpServletResponse.SC_UNAUTHORIZED
-            );
+                        // CREATE ALERT
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/alerts"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "OPERATOR"
+                        )
 
-            response.setContentType("application/json");
+                        // RESOLVE ALERT
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/alerts/**"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "OPERATOR"
+                        )
 
-            response.getWriter().write(
-                    "{\"error\":\"Invalid or expired access token\"}"
-            );
+                        .anyRequest().authenticated()
+                )
 
-            return;
-        }
+                // Return 401 when authentication is missing
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(
+                                (request, response, authException) -> {
 
-        // Valid token
-        String username =
-                jwtUtil.extractUsername(token);
+                                    response.setStatus(
+                                            HttpServletResponse.SC_UNAUTHORIZED
+                                    );
+                                }
+                        )
+                )
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        username,
-                        null,
-                        Collections.emptyList()
+                .formLogin(form ->
+                        form.disable()
+                )
+
+                .httpBasic(basic ->
+                        basic.disable()
                 );
 
-        SecurityContextHolder
-                .getContext()
-                .setAuthentication(authentication);
+        http.addFilterBefore(
+                jwtFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
 
-        filterChain.doFilter(request, response);
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration =
+                new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of(
+                        "http://localhost:5173"
+                )
+        );
+
+        configuration.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS"
+                )
+        );
+
+        configuration.setAllowedHeaders(
+                List.of("*")
+        );
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
+
+        return source;
     }
 }

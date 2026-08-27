@@ -40,39 +40,64 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        String authHeader =
+                request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null &&
+                authHeader.startsWith("Bearer ")) {
 
-            String token = authHeader.substring(7);
+            String token =
+                    authHeader.substring(7);
 
-            if (jwtUtil.isTokenValid(token)
-                    && !jwtUtil.isRefreshToken(token)) {
+            // Invalid or expired access token
+            if (!jwtUtil.isTokenValid(token)) {
 
-                String username = jwtUtil.extractUsername(token);
+                response.setStatus(
+                        HttpServletResponse.SC_UNAUTHORIZED
+                );
 
-                User user = userRepository.findByUsername(username)
-                        .orElse(null);
+                return;
+            }
 
-                if (user != null && user.isEnabled()) {
+            // Refresh token cannot be used as access token
+            if (jwtUtil.isRefreshToken(token)) {
 
-                    var authorities = user.getRoles()
-                            .stream()
-                            .map(Role::getName)
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
+                response.setStatus(
+                        HttpServletResponse.SC_UNAUTHORIZED
+                );
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    username,
-                                    null,
-                                    authorities
-                            );
+                return;
+            }
 
-                    SecurityContextHolder
-                            .getContext()
-                            .setAuthentication(authentication);
-                }
+            String username =
+                    jwtUtil.extractUsername(token);
+
+            User user =
+                    userRepository
+                            .findByUsername(username)
+                            .orElse(null);
+
+            if (user != null && user.isEnabled()) {
+
+                var authorities =
+                        user.getRoles()
+                                .stream()
+                                .map(Role::getName)
+                                .map(SimpleGrantedAuthority::new)
+                                .collect(Collectors.toList());
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                username,
+                                null,
+                                authorities
+                        );
+
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(
+                                authentication
+                        );
             }
         }
 

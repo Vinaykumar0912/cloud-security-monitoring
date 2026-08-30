@@ -3,6 +3,7 @@ import './App.css'
 
 import { useAuth } from './context/AuthContext.jsx'
 import Login from './components/Login.jsx'
+import Alerts from './components/Alerts.jsx'
 import apiClient from './api/apiClient'
 
 interface Asset {
@@ -323,6 +324,7 @@ function App() {
                   </div>
 
               )}
+              <Alerts />
 
             </div>
 

@@ -5,10 +5,12 @@ import { login as loginApi } from "../api/authApi";
 const AuthContext = createContext({
     accessToken: null,
     refreshToken: null,
+    role: null,
     user: null,
     login: async () => {},
     logout: () => {},
 });
+
 export const AuthProvider = ({ children }) => {
 
     // Access token
@@ -16,14 +18,21 @@ export const AuthProvider = ({ children }) => {
         localStorage.getItem("accessToken")
     );
 
-    // Refresh / reference token
+    // Refresh token
     const [refreshToken, setRefreshToken] = useState(
         localStorage.getItem("refreshToken")
     );
 
-    // Decode existing JWT token
+    // Role
+    const [role, setRole] = useState(
+        localStorage.getItem("role")
+    );
+
+    // Decode existing JWT
     const [user, setUser] = useState(() => {
-        const token = localStorage.getItem("accessToken");
+
+        const token =
+            localStorage.getItem("accessToken");
 
         if (!token) {
             return null;
@@ -36,65 +45,110 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
+
     // LOGIN
     const login = async (username, password) => {
+
         try {
-            // Call login API
-            const data = await loginApi(username, password);
 
-            // Backend currently returns "token"
-            const token = data.accessToken || data.token;
+            const data =
+                await loginApi(
+                    username,
+                    password
+                );
 
-            const refresh = data.refreshToken || null;
+            const token =
+                data.accessToken || data.token;
+
+            const refresh =
+                data.refreshToken || null;
+
+            const userRole =
+                data.role || null;
 
             if (!token) {
-                throw new Error("Access token not received");
+                throw new Error(
+                    "Access token not received"
+                );
             }
 
             // Store access token
-            localStorage.setItem("accessToken", token);
+            localStorage.setItem(
+                "accessToken",
+                token
+            );
 
-            // Store refresh token if available
+            // Store refresh token
             if (refresh) {
-                localStorage.setItem("refreshToken", refresh);
+
+                localStorage.setItem(
+                    "refreshToken",
+                    refresh
+                );
+            }
+
+            // Store role
+            if (userRole) {
+
+                localStorage.setItem(
+                    "role",
+                    userRole
+                );
             }
 
             // Update state
             setAccessToken(token);
             setRefreshToken(refresh);
+            setRole(userRole);
 
             // Decode JWT
-            const decodedUser = jwtDecode(token);
+            const decodedUser =
+                jwtDecode(token);
 
-            // Store decoded user
             setUser(decodedUser);
 
             return data;
 
         } catch (error) {
-            console.error("Login failed:", error);
+
+            console.error(
+                "Login failed:",
+                error
+            );
+
             throw error;
         }
     };
 
+
     // LOGOUT
     const logout = () => {
 
-        // Remove tokens
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        localStorage.removeItem(
+            "accessToken"
+        );
 
-        // Clear states
+        localStorage.removeItem(
+            "refreshToken"
+        );
+
+        localStorage.removeItem(
+            "role"
+        );
+
         setAccessToken(null);
         setRefreshToken(null);
+        setRole(null);
         setUser(null);
     };
+
 
     return (
         <AuthContext.Provider
             value={{
                 accessToken,
                 refreshToken,
+                role,
                 user,
                 login,
                 logout,
@@ -105,6 +159,8 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+
 export const useAuth = () => {
+
     return useContext(AuthContext);
 };

@@ -30,7 +30,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+        return "OPTIONS".equalsIgnoreCase(request.getMethod())
+                || request.getRequestURI().startsWith("/api/auth/");
     }
 
     @Override
@@ -95,9 +96,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder
                         .getContext()
-                        .setAuthentication(
-                                authentication
-                        );
+                        .setAuthentication(authentication);
             }
         }
 

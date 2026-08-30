@@ -49,22 +49,32 @@ public class AlertService {
         Alert savedAlert = alertRepository.save(alert);
 
 
-        // Send email notification
-        try {
+        // Send email notification only for HIGH and CRITICAL alerts
+        if (alert.getSeverity() == Alert.AlertSeverity.HIGH ||
+                alert.getSeverity() == Alert.AlertSeverity.CRITICAL) {
 
-            notificationMailService.sendAlertEmail(
-                    notificationRecipient,
-                    String.valueOf(asset.getAssetType()),
-                    String.valueOf(asset.getStatus()),
-                    severity,
-                    message
-            );
+            try {
 
-            log.info("Alert notification email sent successfully");
+                notificationMailService.sendAlertEmail(
+                        notificationRecipient,
+                        String.valueOf(asset.getAssetType()),
+                        String.valueOf(asset.getStatus()),
+                        severity,
+                        message
+                );
 
-        } catch (Exception e) {
+                log.info(
+                        "Alert notification email sent successfully for {} severity",
+                        severity
+                );
 
-            log.error("Failed to send alert notification email", e);
+            } catch (Exception e) {
+
+                log.error(
+                        "Failed to send alert notification email",
+                        e
+                );
+            }
         }
 
         try {

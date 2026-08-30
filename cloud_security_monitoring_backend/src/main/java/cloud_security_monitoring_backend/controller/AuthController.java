@@ -32,18 +32,30 @@ public class AuthController {
                 .orElseThrow(() ->
                         new RuntimeException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(
+                rawPassword,
+                user.getPassword())) {
+
             throw new RuntimeException("Invalid credentials");
         }
 
-        String accessToken = jwtUtil.generateToken(username);
-        String refreshToken = jwtUtil.generateRefreshToken(username);
+        String accessToken =
+                jwtUtil.generateToken(username);
+
+        String refreshToken =
+                jwtUtil.generateRefreshToken(username);
+
+        String role = user.getRoles()
+                .stream()
+                .findFirst()
+                .map(roleEntity -> roleEntity.getName())
+                .orElse("ROLE_VIEWER");
 
         return Map.of(
                 "accessToken", accessToken,
-                "refreshToken", refreshToken
+                "refreshToken", refreshToken,
+                "role", role
         );
-
     }
     @PostMapping("/refresh")
     public Map<String, String> refresh(

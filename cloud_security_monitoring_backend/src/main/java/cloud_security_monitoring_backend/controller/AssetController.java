@@ -1,5 +1,5 @@
 package cloud_security_monitoring_backend.controller;
-
+import cloud_security_monitoring_backend.Entity.Asset;
 import cloud_security_monitoring_backend.dto.DashboardSummaryDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +21,16 @@ public class AssetController {
     public List<AssetDTO> getAllAssets() {
         return assetService.getAllAssets();
     }
-
+    @GetMapping("/search")
+    public List<Asset> searchAssets(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status
+    ) {
+        return assetService.searchAndFilter(
+                search,
+                status
+        );
+    }
     @GetMapping("/{id}")
     public AssetDTO getAssetById(@PathVariable Long id) {
         return assetService.getAssetById(id);

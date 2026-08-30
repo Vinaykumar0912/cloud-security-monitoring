@@ -3,6 +3,8 @@ package cloud_security_monitoring_backend.service;
 import cloud_security_monitoring_backend.dto.DashboardSummaryDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import cloud_security_monitoring_backend.repository.AssetSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import cloud_security_monitoring_backend.Entity.Asset;
 import cloud_security_monitoring_backend.dto.AssetDTO;
 import cloud_security_monitoring_backend.repository.AssetRepository;
@@ -134,5 +136,18 @@ public class AssetService {
                 .avgCpuUsage(avgCpu)
                 .avgMemoryUsage(avgMem)
                 .build();
+    }
+    public List<Asset> searchAndFilter(
+            String search,
+            String status
+    ) {
+
+        Specification<Asset> specification =
+                AssetSpecification.searchAssets(
+                        search,
+                        status
+                );
+
+        return assetRepository.findAll(specification);
     }
 }

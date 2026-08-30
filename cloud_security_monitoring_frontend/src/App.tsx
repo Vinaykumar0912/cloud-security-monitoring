@@ -4,6 +4,7 @@ import './App.css'
 import { useAuth } from './context/AuthContext.jsx'
 import Login from './components/Login.jsx'
 import Alerts from './components/Alerts.jsx'
+import AddAsset from './components/AddAsset.jsx'
 import apiClient from './api/apiClient'
 
 interface Asset {
@@ -32,7 +33,7 @@ interface DashboardSummary {
 
 function App() {
 
-  const { accessToken, logout } = useAuth()
+  const { accessToken, logout, role } = useAuth()
 
   const [assets, setAssets] = useState<Asset[]>([])
   const [summary, setSummary] =
@@ -40,6 +41,7 @@ function App() {
 
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState('')
 
 
   // GET DASHBOARD SUMMARY
@@ -103,7 +105,57 @@ function App() {
 
     }
   }
+  // SEARCH ASSETS
+  const searchAssets = async (searchValue: string) => {
 
+    if (!accessToken) {
+      setMessage('Please login first')
+      return
+    }
+
+    // If search box is empty, clear the search results
+    if (!searchValue.trim()) {
+      setSearch('')
+      setAssets([])
+      setMessage('')
+      return
+    }
+
+    setSearch(searchValue)
+    setLoading(true)
+    setMessage('')
+
+    try {
+
+      const response = await apiClient.get(
+          '/api/assets/search',
+          {
+            params: {
+              search: searchValue
+            }
+          }
+      )
+
+      setAssets(response.data)
+
+      if (response.data.length === 0) {
+        setMessage('No matching assets found')
+      }
+
+    } catch (error) {
+
+      setMessage(
+          error instanceof Error
+              ? error.message
+              : 'Failed to search assets'
+      )
+
+    } finally {
+
+      setLoading(false)
+
+    }
+  }
 
   // LOGOUT
   const handleLogout = () => {
@@ -243,7 +295,29 @@ function App() {
                   <p>{message}</p>
               )}
 
+              {/* SEARCH ASSETS */}
 
+              <div className="asset-search">
+
+                <input
+                    type="text"
+                    placeholder="Search assets by name..."
+                    value={search}
+                    onChange={(event) =>
+                        searchAssets(event.target.value)
+                    }
+                />
+
+                {search && (
+                    <button
+                        type="button"
+                        onClick={() => searchAssets('')}
+                    >
+                      Clear
+                    </button>
+                )}
+
+              </div>
               {/* ASSETS */}
 
               {assets.length > 0 && (
@@ -324,6 +398,22 @@ function App() {
                   </div>
 
               )}
+
+              {/* ADD ASSET - ADMIN ONLY */}
+
+              {role === 'ROLE_ADMIN' && (
+                  <AddAsset
+                      onAssetAdded={async () => {
+
+                        await Promise.all([
+                          getAssets(),
+                          getDashboardSummary()
+                        ])
+
+                      }}
+                  />
+              )}
+
               <Alerts />
 
             </div>

@@ -1,321 +1,527 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
 import apiClient from "../api/apiClient";
+import "./Alerts.css";
+
+const AlertIcon = () => (
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="M10.3 3.4 2.4 17a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.4a2 2 0 0 0-3.4 0Z" />
+        <path d="M12 8v5" />
+        <path d="M12 16h.01" />
+    </svg>
+);
+
+const RefreshIcon = () => (
+    <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="M20 11a8.1 8.1 0 0 0-14.8-4L3 10" />
+        <path d="M3 4v6h6" />
+        <path d="M4 13a8.1 8.1 0 0 0 14.8 4L21 14" />
+        <path d="M21 20v-6h-6" />
+    </svg>
+);
+
+const CheckIcon = () => (
+    <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="m5 12 4 4L19 6" />
+    </svg>
+);
 
 const Alerts = () => {
-
-    const { role } = useAuth();
-
     const [alerts, setAlerts] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
+    const [view, setView] = useState("OPEN");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [filter, setFilter] = useState("ALL");
+    const [resolvingId, setResolvingId] = useState(null);
 
-    const [assetId, setAssetId] = useState("");
-    const [severity, setSeverity] = useState("HIGH");
-    const [alertMessage, setAlertMessage] = useState("");
-
-    const canModify =
-        role === "ROLE_ADMIN" ||
-        role === "ROLE_OPERATOR";
-
-
-    // ==========================================
-    // GET OPEN ALERTS
-    // ==========================================
+    /* =====================================================
+       LOAD ALERTS
+    ===================================================== */
 
     const loadAlerts = async () => {
-
         setLoading(true);
-        setMessage("");
+        setError("");
 
         try {
+            const endpoint =
+                view === "OPEN"
+                    ? "/api/alerts/open"
+                    : "/api/alerts/history";
 
-            const response =
-                await apiClient.get(
-                    "/api/alerts/open"
-                );
+            const response = await apiClient.get(endpoint);
 
-            setAlerts(response.data);
-
-        } catch (error) {
-
-            setMessage(
-                error?.response?.status === 403
-                    ? "You do not have permission to view alerts."
-                    : "Failed to load alerts."
+            setAlerts(
+                Array.isArray(response.data)
+                    ? response.data
+                    : []
             );
-
+        } catch (err) {
+            console.error("Failed to load alerts:", err);
+            setError("Unable to load alerts.");
         } finally {
-
             setLoading(false);
         }
     };
 
+    useEffect(() => {
+        loadAlerts();
+    }, [view]);
 
-    // ==========================================
-    // CREATE ALERT
-    // ADMIN + OPERATOR
-    // ==========================================
-
-    const createAlert = async (event) => {
-
-        event.preventDefault();
-
-        if (!canModify) {
-            setMessage(
-                "You do not have permission to create alerts."
-            );
-            return;
-        }
-
-        try {
-
-            await apiClient.post(
-                "/api/alerts",
-                null,
-                {
-                    params: {
-                        assetId: Number(assetId),
-                        severity: severity,
-                        message: alertMessage
-                    }
-                }
-            );
-
-            setMessage(
-                "Alert created successfully!"
-            );
-
-            setAssetId("");
-            setAlertMessage("");
-            setSeverity("HIGH");
-
-            await loadAlerts();
-
-        } catch (error) {
-
-            setMessage(
-                error?.response?.status === 403
-                    ? "You do not have permission to create alerts."
-                    : "Failed to create alert."
-            );
-        }
-    };
-
-
-    // ==========================================
-    // RESOLVE ALERT
-    // ADMIN + OPERATOR
-    // ==========================================
+    /* =====================================================
+       RESOLVE ALERT
+    ===================================================== */
 
     const resolveAlert = async (id) => {
-
-        if (!canModify) {
-            setMessage(
-                "You do not have permission to resolve alerts."
-            );
-            return;
-        }
+        setResolvingId(id);
+        setError("");
 
         try {
-
             await apiClient.put(
                 `/api/alerts/${id}/resolve`
             );
 
-            setMessage(
-                "Alert resolved successfully!"
-            );
-
             await loadAlerts();
-
-        } catch (error) {
-
-            setMessage(
-                error?.response?.status === 403
-                    ? "You do not have permission to resolve alerts."
-                    : "Failed to resolve alert."
+        } catch (err) {
+            console.error(
+                "Failed to resolve alert:",
+                err
             );
+
+            setError(
+                "Unable to resolve alert."
+            );
+        } finally {
+            setResolvingId(null);
         }
     };
 
+    /* =====================================================
+       FILTER
+    ===================================================== */
 
-    // ==========================================
-    // LOAD ALERTS WHEN COMPONENT OPENS
-    // ==========================================
+    const filteredAlerts =
+        filter === "ALL"
+            ? alerts
+            : alerts.filter(
+                (alert) =>
+                    String(
+                        alert.severity || ""
+                    ).toUpperCase() === filter
+            );
 
-    useEffect(() => {
+    /* =====================================================
+       SEVERITY
+    ===================================================== */
 
-        loadAlerts();
+    const getSeverityClass = (severity) => {
+        const value = String(
+            severity || "MEDIUM"
+        ).toUpperCase();
 
-    }, []);
+        if (value === "CRITICAL") {
+            return "critical";
+        }
 
+        if (value === "HIGH") {
+            return "high";
+        }
+
+        if (value === "WARNING") {
+            return "warning";
+        }
+
+        return "medium";
+    };
+
+    /* =====================================================
+       DATE
+    ===================================================== */
+
+    const formatDate = (value) => {
+        if (!value) {
+            return "Recently";
+        }
+
+        try {
+            return new Date(value).toLocaleString(
+                "en-IN",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                }
+            );
+        } catch {
+            return value;
+        }
+    };
 
     return (
-        <div
-            style={{
-                marginTop: "30px",
-                padding: "20px",
-                border: "1px solid #ddd",
-                borderRadius: "10px"
-            }}
-        >
+        <div className="alerts-page">
 
-            <h2>Alerts</h2>
+            {/* =================================================
+                ALERT HEADER
+            ================================================= */}
 
-            <p>
-                Current Role:{" "}
-                <strong>{role || "UNKNOWN"}</strong>
-            </p>
+            <div className="alerts-heading">
 
+                <div className="alert-view-tabs">
 
-            {message && (
-                <p>{message}</p>
-            )}
-
-
-            {/* ==================================
-                CREATE ALERT
-                ================================== */}
-
-            {canModify && (
-
-                <form
-                    onSubmit={createAlert}
-                    style={{
-                        marginBottom: "25px",
-                        padding: "15px",
-                        border: "1px solid #ddd",
-                        borderRadius: "8px"
-                    }}
-                >
-
-                    <h3>Create Alert</h3>
-
-                    <input
-                        type="number"
-                        placeholder="Asset ID"
-                        value={assetId}
-                        onChange={(event) =>
-                            setAssetId(event.target.value)
+                    <button
+                        className={
+                            view === "OPEN"
+                                ? "alert-view-tab active"
+                                : "alert-view-tab"
                         }
-                        required
-                    />
-
-                    <select
-                        value={severity}
-                        onChange={(event) =>
-                            setSeverity(event.target.value)
+                        onClick={() =>
+                            setView("OPEN")
                         }
                     >
-                        <option value="LOW">
-                            LOW
-                        </option>
-
-                        <option value="MEDIUM">
-                            MEDIUM
-                        </option>
-
-                        <option value="HIGH">
-                            HIGH
-                        </option>
-
-                        <option value="CRITICAL">
-                            CRITICAL
-                        </option>
-                    </select>
-
-                    <input
-                        type="text"
-                        placeholder="Alert message"
-                        value={alertMessage}
-                        onChange={(event) =>
-                            setAlertMessage(
-                                event.target.value
-                            )
-                        }
-                        required
-                    />
-
-                    <button type="submit">
-                        Create Alert
+                        Open Alerts
                     </button>
 
-                </form>
+                    <button
+                        className={
+                            view === "HISTORY"
+                                ? "alert-view-tab active"
+                                : "alert-view-tab"
+                        }
+                        onClick={() =>
+                            setView("HISTORY")
+                        }
+                    >
+                        Alert History
+                    </button>
+
+                </div>
+
+                <button
+                    className="alerts-refresh"
+                    onClick={loadAlerts}
+                    disabled={loading}
+                >
+                    <RefreshIcon />
+
+                    {loading
+                        ? "Refreshing..."
+                        : "Refresh"}
+                </button>
+
+            </div>
+
+
+            {/* =================================================
+                FILTERS
+            ================================================= */}
+
+            <div className="alert-filters">
+
+                {[
+                    "ALL",
+                    "CRITICAL",
+                    "HIGH",
+                    "WARNING",
+                    "MEDIUM",
+                ].map((item) => (
+
+                    <button
+                        key={item}
+                        className={
+                            filter === item
+                                ? "alert-filter active"
+                                : "alert-filter"
+                        }
+                        onClick={() =>
+                            setFilter(item)
+                        }
+                    >
+                        {item === "ALL"
+                            ? "All"
+                            : item}
+                    </button>
+
+                ))}
+
+                <span className="alert-count">
+
+                    {filteredAlerts.length}{" "}
+
+                    {view === "OPEN"
+                        ? "open"
+                        : "resolved"}
+
+                </span>
+
+            </div>
+
+
+            {/* =================================================
+                ERROR
+            ================================================= */}
+
+            {error && (
+                <div className="alerts-error">
+                    {error}
+                </div>
             )}
 
 
-            {/* ==================================
+            {/* =================================================
+                LOADING
+            ================================================= */}
+
+            {loading && (
+                <div className="alerts-empty">
+                    Loading alerts...
+                </div>
+            )}
+
+
+            {/* =================================================
                 ALERT LIST
-                ================================== */}
+            ================================================= */}
 
-            {loading ? (
+            {!loading &&
+                filteredAlerts.length > 0 && (
 
-                <p>Loading alerts...</p>
+                    <div className="alert-list">
 
-            ) : alerts.length === 0 ? (
+                        {filteredAlerts.map(
+                            (alert) => {
 
-                <p>No open alerts.</p>
+                                const severityClass =
+                                    getSeverityClass(
+                                        alert.severity
+                                    );
 
-            ) : (
+                                return (
 
-                alerts.map((alert) => (
+                                    <div
+                                        className={`alert-card ${severityClass}`}
+                                        key={alert.id}
+                                    >
 
-                    <div
-                        key={alert.id}
-                        style={{
-                            padding: "15px",
-                            marginBottom: "10px",
-                            border: "1px solid #ddd",
-                            borderRadius: "8px"
-                        }}
-                    >
+                                        {/* =====================
+                                            ICON
+                                        ===================== */}
 
-                        <h3>
-                            {alert.severity}
-                        </h3>
-
-                        <p>
-                            <strong>Asset:</strong>{" "}
-                            {alert.assetName ||
-                                alert.assetId}
-                        </p>
-
-                        <p>
-                            <strong>Message:</strong>{" "}
-                            {alert.message}
-                        </p>
-
-                        <p>
-                            <strong>Status:</strong>{" "}
-                            {alert.status}
-                        </p>
-
-                        <p>
-                            <strong>Created:</strong>{" "}
-                            {alert.createdAt}
-                        </p>
+                                        <div
+                                            className={`alert-icon ${severityClass}`}
+                                        >
+                                            <AlertIcon />
+                                        </div>
 
 
-                        {canModify && (
+                                        {/* =====================
+                                            CONTENT
+                                        ===================== */}
 
-                            <button
-                                onClick={() =>
-                                    resolveAlert(
-                                        alert.id
-                                    )
-                                }
-                            >
-                                Resolve
-                            </button>
+                                        <div className="alert-content">
 
+                                            <div className="alert-top">
+
+                                                <div className="alert-title-area">
+
+                                                    <span
+                                                        className={`severity-badge ${severityClass}`}
+                                                    >
+                                                        {String(
+                                                            alert.severity ||
+                                                            "MEDIUM"
+                                                        ).toUpperCase()}
+                                                    </span>
+
+                                                    <h3>
+                                                        {alert.title ||
+                                                            alert.message ||
+                                                            "Security Alert"}
+                                                    </h3>
+
+                                                </div>
+
+                                                <span className="alert-time">
+
+                                                    {formatDate(
+                                                        alert.createdAt ||
+                                                        alert.timestamp ||
+                                                        alert.date
+                                                    )}
+
+                                                </span>
+
+                                            </div>
+
+
+                                            {/* =====================
+                                                MESSAGE
+                                            ===================== */}
+
+                                            <p className="alert-message">
+
+                                                {alert.message ||
+                                                    "A security event requires attention."}
+
+                                            </p>
+
+
+                                            {/* =====================
+                                                META
+                                            ===================== */}
+
+                                            <div className="alert-meta">
+
+                                                {alert.assetName && (
+                                                    <span>
+                                                        Asset:{" "}
+
+                                                        <strong>
+                                                            {
+                                                                alert.assetName
+                                                            }
+                                                        </strong>
+                                                    </span>
+                                                )}
+
+                                                {alert.assetId && (
+                                                    <span>
+                                                        Asset ID:{" "}
+
+                                                        {
+                                                            alert.assetId
+                                                        }
+                                                    </span>
+                                                )}
+
+                                                {alert.type && (
+                                                    <span>
+                                                        Type:{" "}
+
+                                                        {
+                                                            alert.type
+                                                        }
+                                                    </span>
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {/* =====================
+                                            STATUS / RESOLVE
+                                        ===================== */}
+
+                                        {view === "OPEN" ? (
+
+                                            <button
+                                                className="resolve-button"
+                                                onClick={() =>
+                                                    resolveAlert(
+                                                        alert.id
+                                                    )
+                                                }
+                                                disabled={
+                                                    resolvingId ===
+                                                    alert.id
+                                                }
+                                            >
+
+                                                {resolvingId ===
+                                                alert.id
+                                                    ? "Resolving..."
+                                                    : "Resolve"}
+
+                                            </button>
+
+                                        ) : (
+
+                                            <div className="resolved-info">
+
+                                                <span className="alert-status-badge">
+                                                    RESOLVED
+                                                </span>
+
+                                                <span className="resolved-time">
+                                                    {formatDate(
+                                                        alert.resolvedAt
+                                                    )}
+                                                </span>
+
+                                            </div>
+
+                                        )}
+
+                                    </div>
+
+                                );
+                            }
                         )}
 
                     </div>
 
-                ))
+                )}
 
-            )}
+
+            {/* =================================================
+                EMPTY STATE
+            ================================================= */}
+
+            {!loading &&
+                filteredAlerts.length === 0 && (
+
+                    <div className="alerts-empty">
+
+                        <div className="empty-alert-icon">
+                            <CheckIcon />
+                        </div>
+
+                        <strong>
+
+                            {view === "OPEN"
+                                ? "No open alerts"
+                                : "No alert history"}
+
+                        </strong>
+
+                        <span>
+
+                            {view === "OPEN"
+                                ? "Your monitored infrastructure currently has no matching security alerts."
+                                : "There are no resolved security alerts to display."}
+
+                        </span>
+
+                    </div>
+
+                )}
 
         </div>
     );

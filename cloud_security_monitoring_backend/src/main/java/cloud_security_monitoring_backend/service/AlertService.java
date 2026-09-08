@@ -35,16 +35,51 @@ public class AlertService {
     public AlertDTO createAlert(Long assetId, String severity, String message) {
 
         Asset asset = assetRepository.findById(assetId)
-                .orElseThrow(() ->
-                        new RuntimeException("Asset not found: " + assetId));
+                .orElseThrow(() -> new RuntimeException("Asset not found: " + assetId));
+
+        Alert.AlertSeverity alertSeverity;
+
+        try {
+            alertSeverity = Alert.AlertSeverity.valueOf(
+                    severity.trim().toUpperCase()
+            );
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException(
+                    "Invalid alert severity. Allowed values: LOW, MEDIUM, HIGH, CRITICAL."
+            );
+        }
+
+        // Prevent duplicate OPEN alerts for the same asset and severity
+        if (alertRepository.existsByAssetIdAndSeverityAndStatus(
+                assetId,
+                alertSeverity,
+                Alert.AlertStatus.OPEN)) {
+
+            log.info(
+                    "Duplicate alert skipped for asset {} with severity {}",
+                    assetId,
+                    severity
+            );
+
+            return alertRepository.findByAssetId(assetId)
+                    .stream()
+                    .filter(alert ->
+                            alert.getSeverity() == alertSeverity &&
+                                    alert.getStatus() == Alert.AlertStatus.OPEN
+                    )
+                    .findFirst()
+                    .map(this::toDTO)
+                    .orElseThrow();
+        }
 
         Alert alert = Alert.builder()
                 .asset(asset)
-                .severity(Alert.AlertSeverity.valueOf(severity))
+                .severity(alertSeverity)
                 .message(message)
                 .status(Alert.AlertStatus.OPEN)
                 .createdAt(LocalDateTime.now())
                 .build();
+
 
         Alert savedAlert = alertRepository.save(alert);
 
@@ -105,10 +140,68 @@ public class AlertService {
                 .orElseThrow(() ->
                         new RuntimeException("Alert not found: " + alertId));
 
+        // Prevent duplicate resolution notifications
+        if (alert.getStatus() == Alert.AlertStatus.RESOLVED) {
+            return toDTO(alert);
+        }
+
         alert.setStatus(Alert.AlertStatus.RESOLVED);
         alert.setResolvedAt(LocalDateTime.now());
 
-        return toDTO(alertRepository.save(alert));
+        Alert savedAlert = alertRepository.save(alert);
+
+        Asset asset = alert.getAsset();
+
+        // Send resolution email only for HIGH and CRITICAL alerts
+        if (alert.getSeverity() == Alert.AlertSeverity.HIGH ||
+                alert.getSeverity() == Alert.AlertSeverity.CRITICAL) {
+
+            try {
+
+                notificationMailService.sendAlertEmail(
+                        notificationRecipient,
+                        String.valueOf(asset.getAssetType()),
+                        String.valueOf(asset.getStatus()),
+                        alert.getSeverity().name(),
+                        "ALERT RESOLVED: " + alert.getMessage()
+                );
+
+                log.info(
+                        "Alert resolution email sent successfully for {} severity",
+                        alert.getSeverity()
+                );
+
+            } catch (Exception e) {
+
+                log.error(
+                        "Failed to send alert resolution email",
+                        e
+                );
+            }
+        }
+
+        // Send resolution SMS for all severities
+        try {
+
+            smsService.sendAlertSms(
+                    smsRecipient,
+                    String.valueOf(asset.getAssetType()),
+                    String.valueOf(asset.getStatus()),
+                    alert.getSeverity().name(),
+                    "ALERT RESOLVED: " + alert.getMessage()
+            );
+
+            log.info("Alert resolution SMS sent successfully");
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Failed to send alert resolution SMS",
+                    e
+            );
+        }
+
+        return toDTO(savedAlert);
     }
 
 
@@ -121,7 +214,16 @@ public class AlertService {
                 .collect(Collectors.toList());
     }
 
+    public List<AlertDTO> getAlertHistory() {
 
+        return alertRepository
+                .findByStatusOrderByResolvedAtDesc(
+                        Alert.AlertStatus.RESOLVED
+                )
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
     private AlertDTO toDTO(Alert alert) {
 
         return AlertDTO.builder()

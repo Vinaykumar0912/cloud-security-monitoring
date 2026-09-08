@@ -3,6 +3,7 @@ package cloud_security_monitoring_backend.controller;
 import cloud_security_monitoring_backend.Entity.User;
 import cloud_security_monitoring_backend.repository.UserRepository;
 import cloud_security_monitoring_backend.util.JwtUtil;
+import cloud_security_monitoring_backend.exception.UnauthorizedException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,13 +31,15 @@ public class AuthController {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
-                        new RuntimeException("Invalid credentials"));
-
+                        new UnauthorizedException("Invalid credentials"));
+        if (!user.isEnabled()) {
+            throw new UnauthorizedException("User account is disabled");
+        }
         if (!passwordEncoder.matches(
                 rawPassword,
                 user.getPassword())) {
 
-            throw new RuntimeException("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         String accessToken =
@@ -66,7 +69,7 @@ public class AuthController {
         if (!jwtUtil.isTokenValid(refreshToken)
                 || !jwtUtil.isRefreshToken(refreshToken)) {
 
-            throw new RuntimeException("Invalid refresh token");
+            throw new UnauthorizedException("Invalid refresh token");
         }
 
         String username = jwtUtil.extractUsername(refreshToken);

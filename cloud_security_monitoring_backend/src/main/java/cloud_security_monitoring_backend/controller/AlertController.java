@@ -19,7 +19,10 @@ public class AlertController {
     public List<AlertDTO> getOpenAlerts() {
         return alertService.getOpenAlerts();
     }
-
+    @GetMapping("/history")
+    public List<AlertDTO> getAlertHistory() {
+        return alertService.getAlertHistory();
+    }
     @PostMapping
     public AlertDTO createAlert(
             @RequestParam Long assetId,

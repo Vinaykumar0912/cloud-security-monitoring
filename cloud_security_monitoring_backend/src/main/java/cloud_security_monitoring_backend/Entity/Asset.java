@@ -40,5 +40,9 @@ public class Asset {
 
     private Double networkUsage;
 
+    private boolean cpuAlertActive;
+
+    private boolean memoryAlertActive;
+
     private LocalDateTime date;
 }

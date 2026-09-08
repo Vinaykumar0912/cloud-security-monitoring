@@ -1,0 +1,331 @@
+/* =========================================================
+   ADD ASSET CARD
+========================================================= */
+
+.add-asset-card {
+    width: 100%;
+    max-width: 1080px;
+
+    margin: 0 auto;
+
+    overflow: hidden;
+
+    border: 1px solid #dfe6ed;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    box-shadow:
+            0 1px 2px rgba(20, 35, 55, 0.025);
+}
+
+
+/* =========================================================
+   SECTIONS
+========================================================= */
+
+.add-asset-section {
+    padding: 25px 28px 27px;
+}
+
+.add-asset-section + .add-asset-section {
+    border-top: 1px solid #e5eaf0;
+}
+
+.add-asset-section-header {
+    margin-bottom: 21px;
+}
+
+.add-asset-section-header h2 {
+    margin: 0;
+
+    color: #26364a;
+
+    font-size: 13px;
+    line-height: 18px;
+
+    font-weight: 700;
+}
+
+.add-asset-section-header p {
+    margin: 5px 0 0;
+
+    color: #8c97a5;
+
+    font-size: 9px;
+    line-height: 13px;
+}
+
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.add-asset-form-grid {
+    display: grid;
+
+    grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+    column-gap: 22px;
+    row-gap: 18px;
+}
+
+
+/* =========================================================
+   FORM FIELD
+========================================================= */
+
+.form-field {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.form-field label {
+    margin-bottom: 7px;
+
+    color: #536277;
+
+    font-size: 9px;
+    line-height: 12px;
+
+    font-weight: 650;
+}
+
+.form-field input,
+.form-field select {
+    width: 100%;
+    height: 37px;
+
+    padding: 0 11px;
+
+    border: 1px solid #d8e0e8;
+    border-radius: 5px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #354357;
+
+    font-size: 10px;
+
+    transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+}
+
+.form-field input::placeholder {
+    color: #a3acb8;
+}
+
+.form-field select {
+    cursor: pointer;
+}
+
+.form-field input:hover,
+.form-field select:hover {
+    border-color: #cbd6e0;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+    border-color: #7fa4c5;
+
+    box-shadow:
+            0 0 0 2px rgba(72, 121, 170, 0.08);
+}
+
+
+/* =========================================================
+   NUMBER INPUT
+========================================================= */
+
+.form-field input[type="number"] {
+    appearance: textfield;
+}
+
+.form-field input[type="number"]::-webkit-inner-spin-button,
+.form-field input[type="number"]::-webkit-outer-spin-button {
+    opacity: 0.5;
+}
+
+
+/* =========================================================
+   MESSAGES
+========================================================= */
+
+.add-asset-error,
+.add-asset-success {
+    margin: 0 28px 18px;
+
+    padding: 10px 12px;
+
+    border-radius: 5px;
+
+    font-size: 9px;
+    line-height: 13px;
+}
+
+.add-asset-error {
+    border: 1px solid #f0d2d2;
+
+    background: #fff5f5;
+
+    color: #ad4b4b;
+}
+
+.add-asset-success {
+    border: 1px solid #cce4d5;
+
+    background: #f1faf4;
+
+    color: #397b58;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.add-asset-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    padding: 16px 28px;
+
+    border-top: 1px solid #e5eaf0;
+
+    background: #fafbfc;
+}
+
+
+/* =========================================================
+   CANCEL
+========================================================= */
+
+.add-asset-cancel {
+    height: 35px;
+
+    padding: 0 14px;
+
+    border: 1px solid #d8e0e8;
+    border-radius: 5px;
+
+    background: #ffffff;
+
+    color: #627084;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.add-asset-cancel:hover:not(:disabled) {
+    background: #f5f7fa;
+}
+
+.add-asset-cancel:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+
+/* =========================================================
+   SUBMIT
+========================================================= */
+
+.add-asset-submit {
+    height: 35px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 0 14px;
+
+    border: 1px solid #2864a7;
+    border-radius: 5px;
+
+    background: #2864a7;
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    transition:
+            background 0.15s ease,
+            border-color 0.15s ease;
+}
+
+.add-asset-submit:hover:not(:disabled) {
+    border-color: #21568f;
+
+    background: #21568f;
+}
+
+.add-asset-submit:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.add-asset-plus {
+    font-size: 15px;
+    line-height: 10px;
+    font-weight: 400;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 700px) {
+    .add-asset-section {
+        padding: 21px 20px 23px;
+    }
+
+    .add-asset-form-grid {
+        grid-template-columns: 1fr;
+
+        row-gap: 16px;
+    }
+
+    .add-asset-footer {
+        padding: 14px 20px;
+    }
+
+    .add-asset-error,
+    .add-asset-success {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+}
+
+
+@media (max-width: 450px) {
+    .add-asset-footer {
+        justify-content: stretch;
+    }
+
+    .add-asset-cancel,
+    .add-asset-submit {
+        flex: 1;
+    }
+}
+.add-asset-card input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.add-asset-card input[type="number"]::-webkit-inner-spin-button,
+.add-asset-card input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

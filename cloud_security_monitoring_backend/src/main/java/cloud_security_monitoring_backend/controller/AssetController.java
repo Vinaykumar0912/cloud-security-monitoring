@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import cloud_security_monitoring_backend.dto.AssetDTO;
 import cloud_security_monitoring_backend.service.AssetService;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -35,13 +36,24 @@ public class AssetController {
     public AssetDTO getAssetById(@PathVariable Long id) {
         return assetService.getAssetById(id);
     }
-
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public AssetDTO createAsset(@RequestBody AssetDTO dto) {
+    public AssetDTO createAsset(@Valid @RequestBody AssetDTO dto) {
         return assetService.createAsset(dto);
     }
-
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AssetDTO updateAsset(
+            @PathVariable Long id,
+            @Valid @RequestBody AssetDTO dto
+    ) {
+        return assetService.updateAsset(id, dto);
+    }
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteAsset(@PathVariable Long id) {
+        assetService.deleteAsset(id);
+    }
     @GetMapping("/dashboard/summary")
     public DashboardSummaryDTO getDashboardSummary() {
         return assetService.getDashboardSummary();

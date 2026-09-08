@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import cloud_security_monitoring_backend.repository.AssetSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import cloud_security_monitoring_backend.Entity.Asset;
+import cloud_security_monitoring_backend.Entity.Alert;
 import cloud_security_monitoring_backend.dto.AssetDTO;
 import cloud_security_monitoring_backend.repository.AssetRepository;
+import cloud_security_monitoring_backend.repository.AlertRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +19,8 @@ public class AssetService {
 
     @Autowired
     private AssetRepository assetRepository;
+    @Autowired
+    private AlertRepository alertRepository;
 
 
     public List<AssetDTO> getAllAssets() {
@@ -25,8 +29,18 @@ public class AssetService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+    public void deleteAsset(Long id) {
 
+        if (!assetRepository.existsById(id)) {
+            throw new RuntimeException("Asset Not Found");
+        }
 
+        // Delete alerts associated with this asset first
+        alertRepository.deleteAll(alertRepository.findByAssetId(id));
+
+        // Then delete the asset
+        assetRepository.deleteById(id);
+    }
     public AssetDTO getAssetById(Long id) {
 
         Asset asset = assetRepository.findById(id)
@@ -107,8 +121,9 @@ public class AssetService {
                 .filter(a -> "OFFLINE".equalsIgnoreCase(a.getStatus()))
                 .count();
 
-        long critical = all.stream()
-                .filter(a -> "CRITICAL".equalsIgnoreCase(a.getStatus()))
+        long critical = alertRepository.findByStatus(Alert.AlertStatus.OPEN)
+                .stream()
+                .filter(alert -> alert.getSeverity() == Alert.AlertSeverity.CRITICAL)
                 .count();
 
         double avgCpu = all.stream()
@@ -149,5 +164,35 @@ public class AssetService {
                 );
 
         return assetRepository.findAll(specification);
+    }
+    public AssetDTO updateAsset(Long id, AssetDTO dto) {
+
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Asset Not Found"));
+
+        // Update editable asset information
+        asset.setAssetName(dto.getAssetName());
+        asset.setAssetType(dto.getAssetType());
+        asset.setIpAddress(dto.getIpAddress());
+        asset.setLocation(dto.getLocation());
+
+        // Update health metrics
+        asset.setCpuUsage(dto.getCpuUsage());
+        asset.setMemoryUsage(dto.getMemoryUsage());
+        asset.setDiskUsage(dto.getDiskUsage());
+        asset.setNetworkUsage(dto.getNetworkUsage());
+
+        /*
+         * Do NOT modify:
+         * - status
+         * - cpuAlertActive
+         * - memoryAlertActive
+         * - id
+         * - date
+         *
+         * These are controlled by the system.
+         */
+
+        return toDTO(assetRepository.save(asset));
     }
 }

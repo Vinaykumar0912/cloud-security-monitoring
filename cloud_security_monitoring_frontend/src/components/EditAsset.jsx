@@ -1,17 +1,19 @@
+
 import { useState } from "react";
 import apiClient from "../api/apiClient";
 import "./AddAsset.css";
 
-function AddAsset({ onAssetAdded, onCancel }) {
+function EditAsset({ asset, onAssetUpdated, onCancel }) {
+
     const [formData, setFormData] = useState({
-        assetName: "",
-        assetType: "SERVER",
-        ipAddress: "",
-        location: "",
-        cpuUsage: "",
-        memoryUsage: "",
-        diskUsage: "",
-        networkUsage: "",
+        assetName: asset.assetName || "",
+        assetType: asset.assetType || "SERVER",
+        ipAddress: asset.ipAddress || "",
+        location: asset.location || "",
+        cpuUsage: asset.cpuUsage ?? "",
+        memoryUsage: asset.memoryUsage ?? "",
+        diskUsage: asset.diskUsage ?? "",
+        networkUsage: asset.networkUsage ?? "",
     });
 
     const [loading, setLoading] = useState(false);
@@ -30,7 +32,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
 
         if (metricFields.includes(name)) {
 
-            // Allow empty value while editing
             if (value === "") {
                 setFormData({
                     ...formData,
@@ -39,14 +40,12 @@ function AddAsset({ onAssetAdded, onCancel }) {
                 return;
             }
 
-            // Allow only numbers with maximum 2 decimal places
             if (!/^\d*(\.\d{0,2})?$/.test(value)) {
                 return;
             }
 
             const number = Number(value);
 
-            // Maximum value is 100
             if (number > 100) {
                 setFormData({
                     ...formData,
@@ -90,7 +89,8 @@ function AddAsset({ onAssetAdded, onCancel }) {
         setLoading(true);
 
         try {
-            await apiClient.post("/api/assets", {
+
+            await apiClient.put(`/api/assets/${asset.id}`, {
                 assetName: formData.assetName.trim(),
                 assetType: formData.assetType,
                 ipAddress: formData.ipAddress.trim(),
@@ -102,38 +102,33 @@ function AddAsset({ onAssetAdded, onCancel }) {
                 networkUsage: Number(formData.networkUsage) || 0,
             });
 
-            setMessage("Asset added successfully.");
+            setMessage("Asset updated successfully.");
 
-            setFormData({
-                assetName: "",
-                assetType: "SERVER",
-                ipAddress: "",
-                location: "",
-                cpuUsage: "",
-                memoryUsage: "",
-                diskUsage: "",
-                networkUsage: "",
-            });
-
-            if (onAssetAdded) {
+            if (onAssetUpdated) {
                 setTimeout(() => {
-                    onAssetAdded();
+                    onAssetUpdated();
                 }, 500);
             }
-        } catch (err) {
-            console.error("Failed to add asset:", err);
+
+        }catch (err) {
+
+            console.error("Failed to update asset:", err);
 
             const data = err?.response?.data;
 
             if (data?.errors && typeof data.errors === "object") {
                 const firstError = Object.values(data.errors)[0];
                 setError(firstError || "Invalid asset details.");
+            } else if (data?.error) {
+                setError(data.error);
             } else if (data?.message) {
                 setError(data.message);
             } else {
-                setError("Failed to add asset. Please check the entered details.");
+                setError("Failed to update asset. Please check the entered details.");
             }
-        } finally {
+        }
+
+        finally {
             setLoading(false);
         }
     };
@@ -141,19 +136,18 @@ function AddAsset({ onAssetAdded, onCancel }) {
     return (
         <div className="add-asset-card">
 
-            {/* ==================================================
-          ASSET INFORMATION
-      ================================================== */}
+            {/* ASSET INFORMATION */}
 
             <section className="add-asset-section">
 
                 <div className="add-asset-section-header">
+
                     <h2>Asset information</h2>
 
                     <p>
-                        Identify the infrastructure asset you want to
-                        monitor.
+                        Update the infrastructure asset information.
                     </p>
+
                 </div>
 
                 <div className="add-asset-form-grid">
@@ -161,6 +155,7 @@ function AddAsset({ onAssetAdded, onCancel }) {
                     {/* ASSET NAME */}
 
                     <div className="form-field">
+
                         <label htmlFor="assetName">
                             Asset name
                         </label>
@@ -169,16 +164,17 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             id="assetName"
                             name="assetName"
                             type="text"
-                            placeholder="e.g. Production Server"
                             value={formData.assetName}
                             onChange={handleChange}
                             required
                         />
+
                     </div>
 
                     {/* IP ADDRESS */}
 
                     <div className="form-field">
+
                         <label htmlFor="ipAddress">
                             IP address
                         </label>
@@ -187,16 +183,17 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             id="ipAddress"
                             name="ipAddress"
                             type="text"
-                            placeholder="e.g. 192.168.1.10"
                             value={formData.ipAddress}
                             onChange={handleChange}
                             required
                         />
+
                     </div>
 
                     {/* LOCATION */}
 
                     <div className="form-field">
+
                         <label htmlFor="location">
                             Location
                         </label>
@@ -205,16 +202,17 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             id="location"
                             name="location"
                             type="text"
-                            placeholder="e.g. Bangalore"
                             value={formData.location}
                             onChange={handleChange}
                             required
                         />
+
                     </div>
 
                     {/* ASSET TYPE */}
 
                     <div className="form-field">
+
                         <label htmlFor="assetType">
                             Asset type
                         </label>
@@ -225,6 +223,7 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             value={formData.assetType}
                             onChange={handleChange}
                         >
+
                             <option value="SERVER">
                                 Server
                             </option>
@@ -244,7 +243,9 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             <option value="OTHER">
                                 Other
                             </option>
+
                         </select>
+
                     </div>
 
                 </div>
@@ -252,18 +253,18 @@ function AddAsset({ onAssetAdded, onCancel }) {
             </section>
 
 
-            {/* ==================================================
-          HEALTH METRICS
-      ================================================== */}
+            {/* HEALTH METRICS */}
 
             <section className="add-asset-section metrics-section">
 
                 <div className="add-asset-section-header">
-                    <h2>Initial health metrics</h2>
+
+                    <h2>Health metrics</h2>
 
                     <p>
-                        Set the current usage values for this asset.
+                        Update the current usage values for this asset.
                     </p>
+
                 </div>
 
                 <div className="add-asset-form-grid">
@@ -271,6 +272,7 @@ function AddAsset({ onAssetAdded, onCancel }) {
                     {/* CPU */}
 
                     <div className="form-field">
+
                         <label htmlFor="cpuUsage">
                             CPU usage (%)
                         </label>
@@ -282,16 +284,17 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             min="0"
                             max="100"
                             step="0.01"
-                            placeholder="0"
                             value={formData.cpuUsage}
                             onChange={handleChange}
                         />
+
                     </div>
 
 
                     {/* MEMORY */}
 
                     <div className="form-field">
+
                         <label htmlFor="memoryUsage">
                             Memory usage (%)
                         </label>
@@ -303,16 +306,17 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             min="0"
                             max="100"
                             step="0.01"
-                            placeholder="0"
                             value={formData.memoryUsage}
                             onChange={handleChange}
                         />
+
                     </div>
 
 
                     {/* DISK */}
 
                     <div className="form-field">
+
                         <label htmlFor="diskUsage">
                             Disk usage (%)
                         </label>
@@ -324,16 +328,17 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             min="0"
                             max="100"
                             step="0.01"
-                            placeholder="0"
                             value={formData.diskUsage}
                             onChange={handleChange}
                         />
+
                     </div>
 
 
                     {/* NETWORK */}
 
                     <div className="form-field">
+
                         <label htmlFor="networkUsage">
                             Network usage (%)
                         </label>
@@ -345,10 +350,10 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             min="0"
                             max="100"
                             step="0.01"
-                            placeholder="0"
                             value={formData.networkUsage}
                             onChange={handleChange}
                         />
+
                     </div>
 
                 </div>
@@ -356,9 +361,7 @@ function AddAsset({ onAssetAdded, onCancel }) {
             </section>
 
 
-            {/* ==================================================
-          MESSAGES
-      ================================================== */}
+            {/* MESSAGES */}
 
             {error && (
                 <div className="add-asset-error">
@@ -373,9 +376,7 @@ function AddAsset({ onAssetAdded, onCancel }) {
             )}
 
 
-            {/* ==================================================
-          FOOTER
-      ================================================== */}
+            {/* FOOTER */}
 
             <div className="add-asset-footer">
 
@@ -389,16 +390,14 @@ function AddAsset({ onAssetAdded, onCancel }) {
                 </button>
 
                 <button
-                    type="submit"
+                    type="button"
                     className="add-asset-submit"
-                    disabled={loading}
                     onClick={handleSubmit}
+                    disabled={loading}
                 >
-                    <span className="add-asset-plus">+</span>
-
                     {loading
-                        ? "Adding..."
-                        : "Add asset"}
+                        ? "Saving..."
+                        : "Save changes"}
                 </button>
 
             </div>
@@ -407,4 +406,4 @@ function AddAsset({ onAssetAdded, onCancel }) {
     );
 }
 
-export default AddAsset;
+export default EditAsset;

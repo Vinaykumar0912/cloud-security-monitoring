@@ -14,7 +14,7 @@ public class AssetSpecification {
 
             Specification<Asset> specification = null;
 
-            // Search by asset name
+
             if (search != null && !search.isBlank()) {
 
                 specification = Specification.where(
@@ -26,7 +26,6 @@ public class AssetSpecification {
                 );
             }
 
-            // Filter by status
             if (status != null && !status.isBlank()) {
 
                 Specification<Asset> statusSpec =

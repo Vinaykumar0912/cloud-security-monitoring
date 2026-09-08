@@ -25,37 +25,68 @@ public class HealthMonitorService {
 
         for (Asset asset : assets) {
 
+            /*
+             * Status represents operational availability.
+             * Health conditions must NOT change the status.
+             *
+             * Currently monitored assets are considered ONLINE.
+             * WARNING/CRITICAL conditions are handled through
+             * health checks and alerts.
+             */
+            asset.setStatus("ONLINE");
 
+            // =========================
+            // CPU HEALTH CHECK
+            // =========================
             if (asset.getCpuUsage() != null
                     && asset.getCpuUsage() >= CPU_THRESHOLD) {
 
-                asset.setStatus("CRITICAL");
+                // Create a new alert only when CPU condition
+                // was previously normal.
+                if (!asset.isCpuAlertActive()) {
 
-                alertService.createAlert(
-                        asset.getId(),
-                        "CRITICAL",
-                        "CPU usage is high: "
-                                + asset.getCpuUsage() + "%"
-                );
+                    alertService.createAlert(
+                            asset.getId(),
+                            "CRITICAL",
+                            "CPU usage is high: "
+                                    + asset.getCpuUsage() + "%"
+                    );
+
+                    asset.setCpuAlertActive(true);
+                }
+
+            } else {
+
+                // CPU condition has returned to normal.
+                // This allows a future high CPU condition
+                // to generate a new alert.
+                asset.setCpuAlertActive(false);
             }
 
-
-            else if (asset.getMemoryUsage() != null
+            // =========================
+            // MEMORY HEALTH CHECK
+            // =========================
+            if (asset.getMemoryUsage() != null
                     && asset.getMemoryUsage() >= MEMORY_THRESHOLD) {
 
-                asset.setStatus("WARNING");
+                // Create a new alert only when memory condition
+                // was previously normal.
+                if (!asset.isMemoryAlertActive()) {
 
-                alertService.createAlert(
-                        asset.getId(),
-                        "MEDIUM",
-                        "Memory usage is high: "
-                                + asset.getMemoryUsage() + "%"
-                );
-            }
+                    alertService.createAlert(
+                            asset.getId(),
+                            "MEDIUM",
+                            "Memory usage is high: "
+                                    + asset.getMemoryUsage() + "%"
+                    );
 
+                    asset.setMemoryAlertActive(true);
+                }
 
-            else {
-                asset.setStatus("ONLINE");
+            } else {
+
+                // Memory condition has returned to normal.
+                asset.setMemoryAlertActive(false);
             }
 
             assetRepository.save(asset);

@@ -50,7 +50,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String token =
                     authHeader.substring(7);
 
-            // Invalid or expired access token
+
             if (!jwtUtil.isTokenValid(token)) {
 
                 response.setStatus(
@@ -60,7 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Refresh token cannot be used as access token
+
             if (jwtUtil.isRefreshToken(token)) {
 
                 response.setStatus(

@@ -100,7 +100,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Return 401 when authentication is missing
+
                 .exceptionHandling(exception ->
                         exception
                                 .authenticationEntryPoint(

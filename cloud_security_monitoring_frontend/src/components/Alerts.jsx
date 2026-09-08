@@ -60,10 +60,6 @@ const Alerts = () => {
     const [filter, setFilter] = useState("ALL");
     const [resolvingId, setResolvingId] = useState(null);
 
-    /* =====================================================
-       LOAD ALERTS
-    ===================================================== */
-
     const loadAlerts = async () => {
         setLoading(true);
         setError("");
@@ -93,10 +89,6 @@ const Alerts = () => {
         loadAlerts();
     }, [view]);
 
-    /* =====================================================
-       RESOLVE ALERT
-    ===================================================== */
-
     const resolveAlert = async (id) => {
         setResolvingId(id);
         setError("");
@@ -121,9 +113,7 @@ const Alerts = () => {
         }
     };
 
-    /* =====================================================
-       FILTER
-    ===================================================== */
+
 
     const filteredAlerts =
         filter === "ALL"
@@ -135,9 +125,7 @@ const Alerts = () => {
                     ).toUpperCase() === filter
             );
 
-    /* =====================================================
-       SEVERITY
-    ===================================================== */
+
 
     const getSeverityClass = (severity) => {
         const value = String(
@@ -159,9 +147,7 @@ const Alerts = () => {
         return "medium";
     };
 
-    /* =====================================================
-       DATE
-    ===================================================== */
+
 
     const formatDate = (value) => {
         if (!value) {
@@ -187,9 +173,7 @@ const Alerts = () => {
     return (
         <div className="alerts-page">
 
-            {/* =================================================
-                ALERT HEADER
-            ================================================= */}
+
 
             <div className="alerts-heading">
 
@@ -238,10 +222,6 @@ const Alerts = () => {
             </div>
 
 
-            {/* =================================================
-                FILTERS
-            ================================================= */}
-
             <div className="alert-filters">
 
                 {[
@@ -283,9 +263,7 @@ const Alerts = () => {
             </div>
 
 
-            {/* =================================================
-                ERROR
-            ================================================= */}
+
 
             {error && (
                 <div className="alerts-error">
@@ -294,10 +272,6 @@ const Alerts = () => {
             )}
 
 
-            {/* =================================================
-                LOADING
-            ================================================= */}
-
             {loading && (
                 <div className="alerts-empty">
                     Loading alerts...
@@ -305,9 +279,7 @@ const Alerts = () => {
             )}
 
 
-            {/* =================================================
-                ALERT LIST
-            ================================================= */}
+
 
             {!loading &&
                 filteredAlerts.length > 0 && (
@@ -329,9 +301,6 @@ const Alerts = () => {
                                         key={alert.id}
                                     >
 
-                                        {/* =====================
-                                            ICON
-                                        ===================== */}
 
                                         <div
                                             className={`alert-icon ${severityClass}`}
@@ -339,10 +308,7 @@ const Alerts = () => {
                                             <AlertIcon />
                                         </div>
 
-
-                                        {/* =====================
-                                            CONTENT
-                                        ===================== */}
+]
 
                                         <div className="alert-content">
 
@@ -380,9 +346,6 @@ const Alerts = () => {
                                             </div>
 
 
-                                            {/* =====================
-                                                MESSAGE
-                                            ===================== */}
 
                                             <p className="alert-message">
 
@@ -390,11 +353,6 @@ const Alerts = () => {
                                                     "A security event requires attention."}
 
                                             </p>
-
-
-                                            {/* =====================
-                                                META
-                                            ===================== */}
 
                                             <div className="alert-meta">
 
@@ -433,11 +391,6 @@ const Alerts = () => {
                                             </div>
 
                                         </div>
-
-
-                                        {/* =====================
-                                            STATUS / RESOLVE
-                                        ===================== */}
 
                                         {view === "OPEN" ? (
 
@@ -490,9 +443,6 @@ const Alerts = () => {
                 )}
 
 
-            {/* =================================================
-                EMPTY STATE
-            ================================================= */}
 
             {!loading &&
                 filteredAlerts.length === 0 && (

@@ -140,11 +140,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
 
     return (
         <div className="add-asset-card">
-
-            {/* ==================================================
-          ASSET INFORMATION
-      ================================================== */}
-
             <section className="add-asset-section">
 
                 <div className="add-asset-section-header">
@@ -157,9 +152,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                 </div>
 
                 <div className="add-asset-form-grid">
-
-                    {/* ASSET NAME */}
-
                     <div className="form-field">
                         <label htmlFor="assetName">
                             Asset name
@@ -176,8 +168,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                         />
                     </div>
 
-                    {/* IP ADDRESS */}
-
                     <div className="form-field">
                         <label htmlFor="ipAddress">
                             IP address
@@ -193,9 +183,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             required
                         />
                     </div>
-
-                    {/* LOCATION */}
-
                     <div className="form-field">
                         <label htmlFor="location">
                             Location
@@ -211,9 +198,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             required
                         />
                     </div>
-
-                    {/* ASSET TYPE */}
-
                     <div className="form-field">
                         <label htmlFor="assetType">
                             Asset type
@@ -251,11 +235,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
 
             </section>
 
-
-            {/* ==================================================
-          HEALTH METRICS
-      ================================================== */}
-
             <section className="add-asset-section metrics-section">
 
                 <div className="add-asset-section-header">
@@ -267,8 +246,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                 </div>
 
                 <div className="add-asset-form-grid">
-
-                    {/* CPU */}
 
                     <div className="form-field">
                         <label htmlFor="cpuUsage">
@@ -288,9 +265,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                         />
                     </div>
 
-
-                    {/* MEMORY */}
-
                     <div className="form-field">
                         <label htmlFor="memoryUsage">
                             Memory usage (%)
@@ -309,9 +283,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                         />
                     </div>
 
-
-                    {/* DISK */}
-
                     <div className="form-field">
                         <label htmlFor="diskUsage">
                             Disk usage (%)
@@ -329,9 +300,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                             onChange={handleChange}
                         />
                     </div>
-
-
-                    {/* NETWORK */}
 
                     <div className="form-field">
                         <label htmlFor="networkUsage">
@@ -354,12 +322,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                 </div>
 
             </section>
-
-
-            {/* ==================================================
-          MESSAGES
-      ================================================== */}
-
             {error && (
                 <div className="add-asset-error">
                     {error}
@@ -371,12 +333,6 @@ function AddAsset({ onAssetAdded, onCancel }) {
                     {message}
                 </div>
             )}
-
-
-            {/* ==================================================
-          FOOTER
-      ================================================== */}
-
             <div className="add-asset-footer">
 
                 <button

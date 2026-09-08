@@ -13,22 +13,18 @@ const AuthContext = createContext({
 
 export const AuthProvider = ({ children }) => {
 
-    // Access token
     const [accessToken, setAccessToken] = useState(
         localStorage.getItem("accessToken")
     );
 
-    // Refresh token
     const [refreshToken, setRefreshToken] = useState(
         localStorage.getItem("refreshToken")
     );
 
-    // Role
     const [role, setRole] = useState(
         localStorage.getItem("role")
     );
 
-    // Decode existing JWT
     const [user, setUser] = useState(() => {
 
         const token =
@@ -45,8 +41,6 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
-
-    // LOGIN
     const login = async (username, password) => {
 
         try {
@@ -72,13 +66,11 @@ export const AuthProvider = ({ children }) => {
                 );
             }
 
-            // Store access token
             localStorage.setItem(
                 "accessToken",
                 token
             );
 
-            // Store refresh token
             if (refresh) {
 
                 localStorage.setItem(
@@ -87,7 +79,6 @@ export const AuthProvider = ({ children }) => {
                 );
             }
 
-            // Store role
             if (userRole) {
 
                 localStorage.setItem(
@@ -96,12 +87,10 @@ export const AuthProvider = ({ children }) => {
                 );
             }
 
-            // Update state
             setAccessToken(token);
             setRefreshToken(refresh);
             setRole(userRole);
 
-            // Decode JWT
             const decodedUser =
                 jwtDecode(token);
 
@@ -120,8 +109,6 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-
-    // LOGOUT
     const logout = () => {
 
         localStorage.removeItem(

@@ -232,9 +232,7 @@ function App() {
   const isAdmin =
       role === "ROLE_ADMIN" || role === "ADMIN";
 
-  /* =========================
-     LOAD DASHBOARD
-  ========================= */
+
 
   const loadDashboard = async () => {
     if (!accessToken) return;
@@ -257,9 +255,6 @@ function App() {
     }
   };
 
-  /* =========================
-     LOAD ASSETS
-  ========================= */
 
   const loadAssets = async () => {
     if (!accessToken) return;
@@ -276,9 +271,6 @@ function App() {
     }
   };
 
-  /* =========================
-     SEARCH + FILTER
-  ========================= */
 
   const searchAssets = async (
       searchValue: string,
@@ -309,9 +301,7 @@ function App() {
     }
   };
 
-    /* =========================
-     DELETE ASSET
-  ========================= */
+
 
     const deleteAsset = async (asset: Asset) => {
         const confirmed = window.confirm(
@@ -340,19 +330,13 @@ function App() {
             );
         }
     };
-  /* =========================
-     INITIAL LOAD
-  ========================= */
+
 
   useEffect(() => {
     if (accessToken) {
       loadDashboard();
     }
   }, [accessToken]);
-
-  /* =========================
-     NAVIGATION
-  ========================= */
 
   const changePage = (newPage: Page) => {
     setPage(newPage);
@@ -366,9 +350,6 @@ function App() {
     }
   };
 
-  /* =========================
-     LOGOUT
-  ========================= */
 
   const handleLogout = () => {
     logout();
@@ -379,17 +360,11 @@ function App() {
     setPage("dashboard");
   };
 
-  /* =========================
-     LOGIN
-  ========================= */
 
   if (!accessToken) {
     return <Login />;
   }
 
-  /* =========================
-     PAGE TITLE
-  ========================= */
 
   const pageTitle =
       page === "dashboard"
@@ -403,13 +378,7 @@ function App() {
   return (
       <div className="app">
 
-        {/* ==================================================
-          SIDEBAR
-      ================================================== */}
-
         <aside className="sidebar">
-
-          {/* BRAND */}
 
           <div className="brand">
             <div className="brand-logo">
@@ -421,8 +390,6 @@ function App() {
               <span>Monitoring System</span>
             </div>
           </div>
-
-          {/* WORKSPACE */}
 
           <div className="sidebar-section">
 
@@ -467,9 +434,6 @@ function App() {
             </button>
 
           </div>
-
-          {/* ADMINISTRATION */}
-
           {isAdmin && (
               <div className="sidebar-section">
 
@@ -491,8 +455,6 @@ function App() {
 
               </div>
           )}
-
-          {/* SIDEBAR BOTTOM */}
 
           <div className="sidebar-bottom">
 
@@ -530,16 +492,7 @@ function App() {
           </div>
 
         </aside>
-
-        {/* ==================================================
-          MAIN AREA
-      ================================================== */}
-
         <div className="main">
-
-          {/* ==================================================
-            HEADER
-        ================================================== */}
 
           <header className="header">
 
@@ -579,16 +532,7 @@ function App() {
 
           </header>
 
-          {/* ==================================================
-            CONTENT
-        ================================================== */}
-
           <main className="content">
-
-            {/* ==================================================
-              DASHBOARD
-          ================================================== */}
-
             {page === "dashboard" && (
                 <>
 
@@ -722,12 +666,7 @@ function App() {
 
                   </section>
 
-                  {/* LOWER PANELS */}
-
                   <div className="dashboard-panels">
-
-                    {/* SYSTEM PERFORMANCE */}
-
                     <section className="panel">
 
                       <div className="panel-header">
@@ -774,9 +713,6 @@ function App() {
                       />
 
                     </section>
-
-                    {/* RECENT ACTIVITY */}
-
                     <section className="panel">
 
                       <div className="panel-header">
@@ -847,10 +783,6 @@ function App() {
                 </>
             )}
 
-            {/* ==================================================
-              ASSETS
-          ================================================== */}
-
             {page === "assets" && (
                 <>
 
@@ -884,8 +816,6 @@ function App() {
                     )}
 
                   </div>
-
-                  {/* TOOLBAR */}
 
                   <div className="asset-toolbar">
 
@@ -950,9 +880,6 @@ function App() {
                 </span>
 
                   </div>
-
-                  {/* ASSET TABLE */}
-
                   <div className="asset-table">
 
                       <div className="asset-table-header">
@@ -1052,10 +979,6 @@ function App() {
                 </>
             )}
 
-            {/* ==================================================
-              ALERTS
-          ================================================== */}
-
             {page === "alerts" && (
                 <>
 
@@ -1083,10 +1006,6 @@ function App() {
 
                 </>
             )}
-
-            {/* ==================================================
-              ADD ASSET
-          ================================================== */}
 
             {page === "add-asset" && isAdmin && (
                 <>
@@ -1131,12 +1050,6 @@ function App() {
 
         </div>
 
-
-
-          {/* ==================================================
-          ASSET DETAILS MODAL
-        ================================================== */}
-
           {selectedAsset && (
               <div
                   className="modal-overlay"
@@ -1153,10 +1066,6 @@ function App() {
 
                       {editingAsset ? (
 
-                          /* =========================
-                             EDIT ASSET
-                          ========================= */
-
                           <EditAsset
                               asset={editingAsset}
 
@@ -1172,10 +1081,6 @@ function App() {
                           />
 
                       ) : (
-
-                          /* =========================
-                             ASSET DETAILS
-                          ========================= */
 
                           <>
 
@@ -1212,11 +1117,6 @@ function App() {
 
                               </div>
 
-
-                              {/* =========================
-                     STATUS
-                  ========================= */}
-
                               <div className="modal-status">
 
                                   <div className="modal-status-item">
@@ -1248,11 +1148,6 @@ function App() {
                                   </div>
 
                               </div>
-
-
-                              {/* =========================
-                     ASSET DETAILS
-                  ========================= */}
 
                               <div className="asset-details-grid">
 
@@ -1346,12 +1241,6 @@ function App() {
                                   </div>
 
                               </div>
-
-
-                              {/* =========================
-                     MODAL FOOTER
-                  ========================= */}
-
                               <div className="modal-footer">
 
                                   {isAdmin && (

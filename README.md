@@ -358,10 +358,15 @@ API functionality can also be tested using Postman.
 ## Author
 
 **Vinay Kumar**
+
 **Deepali Singh**
+
 **Hrishta Dey**
+
 **Lav Saxena**
+
 **NIVETHA V.**
+
 **Rakesh Dintakurthi**
 
 Cloud Security Monitoring System with Incident Management Assistance

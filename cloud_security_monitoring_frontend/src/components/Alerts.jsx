@@ -308,7 +308,7 @@ const Alerts = () => {
                                             <AlertIcon />
                                         </div>
 
-]
+
 
                                         <div className="alert-content">
 

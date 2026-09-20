@@ -356,8 +356,17 @@ API functionality can also be tested using Postman.
 - More comprehensive automated testing
 
 ## Author
+  Vinay Kumar,
 
-**Vinay Kumar**
+  Deepali Singh  
+
+  Hrishta Dey
+
+  Lav Saxena 
+
+  NIVETHA V.
+
+  Rakesh Dintakurthi
 
 **Deepali Singh**
 

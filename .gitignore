@@ -8,4 +8,5 @@
 **/.env
 **/.env.*
 
-cloud_security_monitoring_backend/backend/
+../../cloud-security-monitoring-main/cloud-security-monitoring-main/cloud_security_monitoring_backend/backend/
+*.pem
